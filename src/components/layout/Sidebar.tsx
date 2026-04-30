@@ -1,99 +1,85 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard, PlayCircle, Receipt, FileText,
-  Download, User, LogOut, Zap, TrendingUp
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {
+  LayoutDashboard, TrendingUp, Receipt, FileText, Settings,
+  LogOut, Youtube, Briefcase, Wallet, Sparkles
+} from "lucide-react";
 
-const navigation = [
-  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Mes chaînes", href: "/chaines", icon: PlayCircle },
-  { name: "Dépenses", href: "/depenses", icon: Receipt },
-  { name: "Facturation", href: "/facturation", icon: FileText },
-  { name: "Exports", href: "/exports", icon: Download },
-];
-
-const bottomNav = [
-  { name: "Mon profil", href: "/profil", icon: User },
+const nav = [
+  { href: "/dashboard",    icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/youtube",      icon: Youtube,         label: "YouTube" },
+  { href: "/revenus",      icon: TrendingUp,      label: "Revenus" },
+  { href: "/depenses",     icon: Wallet,          label: "Dépenses" },
+  { href: "/facturation",  icon: FileText,        label: "Facturation" },
+  { href: "/brand-deals",  icon: Briefcase,       label: "Brand Deals" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
 
-  async function handleLogout() {
+  async function signOut() {
+    const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
+    router.refresh();
   }
 
   return (
-    <aside className="flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border">
+    <aside className="w-60 min-h-screen flex flex-col py-6 px-3 border-r border-purple-100 bg-white/80 backdrop-blur-xl">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary">
-          <Zap className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <span className="text-lg font-bold text-foreground">Crezzy</span>
-          <p className="text-xs text-muted-foreground">Finance créateur</p>
+      <div className="px-3 mb-8">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shadow-sm">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+            Crezzy
+          </span>
         </div>
       </div>
 
-      {/* Navigation principale */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Menu</p>
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+      {/* Nav */}
+      <nav className="flex-1 space-y-0.5">
+        {nav.map(({ href, icon: Icon, label }) => {
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              key={href}
+              href={href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                 active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
+                  ? "gradient-primary text-white shadow-md shadow-purple-200"
+                  : "text-purple-900/60 hover:bg-purple-50 hover:text-purple-900"
+              }`}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {item.name}
+              <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-purple-400 group-hover:text-purple-600"}`} />
+              {label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Navigation bas */}
-      <div className="px-3 py-4 border-t border-sidebar-border space-y-1">
-        {bottomNav.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {item.name}
-            </Link>
-          );
-        })}
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
+      {/* Bottom */}
+      <div className="space-y-0.5 pt-4 border-t border-purple-100">
+        <Link
+          href="/parametres"
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+            pathname === "/parametres"
+              ? "gradient-primary text-white shadow-md shadow-purple-200"
+              : "text-purple-900/60 hover:bg-purple-50 hover:text-purple-900"
+          }`}
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <Settings className={`w-4 h-4 ${pathname === "/parametres" ? "text-white" : "text-purple-400 group-hover:text-purple-600"}`} />
+          Paramètres
+        </Link>
+        <button
+          onClick={signOut}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-purple-900/60 hover:bg-red-50 hover:text-red-500 transition-all duration-200 group"
+        >
+          <LogOut className="w-4 h-4 text-purple-400 group-hover:text-red-400" />
           Déconnexion
         </button>
       </div>
