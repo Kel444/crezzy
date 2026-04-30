@@ -1,69 +1,65 @@
-'use client'
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+"use client";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Sparkles, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
-  const supabase = createClient()
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const supabase = createClient();
 
   async function handleRegister(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true); setError('')
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) { setError(error.message); setLoading(false); return }
-    if (data.user) await supabase.from('profiles').upsert({ id: data.user.id, email, full_name: fullName })
-    router.push('/dashboard'); router.refresh()
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) { setError(error.message); setLoading(false); return; }
+    router.push("/dashboard");
+    router.refresh();
   }
 
+  const D = { bg: "#111113", card: "#1C1C1E", border: "rgba(255,255,255,0.08)", text: "#F5F5F7", sub: "#8E8E93", pink: "#FF2D78" };
+
   return (
-    <div style={{ minHeight: '100vh', background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
-      <div style={{ width: '100%', maxWidth: 400 }}>
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #FF6B9D, #FF2D78)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 4px 20px rgba(255,45,120,0.25)' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-          </div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: '#1D1D1F', margin: 0 }}>Crezzy</h1>
-          <p style={{ color: '#6E6E73', fontSize: 14, marginTop: 4 }}>Finance créateur</p>
+    <div style={{ minHeight: "100vh", background: D.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
+        <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg, #FF6B9D, #FF2D78)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(255,45,120,0.4)", marginBottom: 12 }}>
+          <Sparkles style={{ width: 24, height: 24, color: "#fff" }} />
         </div>
-
-        <div style={{ background: '#fff', borderRadius: 20, padding: 32, boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.06)' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#1D1D1F', margin: '0 0 4px' }}>Créer un compte</h2>
-          <p style={{ color: '#6E6E73', fontSize: 14, marginBottom: 24 }}>Prends le contrôle de tes finances ✨</p>
-
-          {error && <div style={{ background: 'rgba(255,59,48,0.06)', border: '1px solid rgba(255,59,48,0.15)', color: '#FF3B30', fontSize: 13, borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>{error}</div>}
-
-          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#1D1D1F', marginBottom: 6 }}>Nom complet</label>
-              <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} className="input-field" placeholder="Kel" />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#1D1D1F', marginBottom: 6 }}>Email</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="input-field" placeholder="toi@email.com" />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#1D1D1F', marginBottom: 6 }}>Mot de passe</label>
-              <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="input-field" placeholder="8 caractères minimum" />
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4, padding: '13px 22px', borderRadius: 12, fontSize: 15 }}>
-              {loading ? <span style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> : 'Créer mon compte'}
-            </button>
-          </form>
-
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#6E6E73', marginTop: 20 }}>
-            Déjà un compte ?{' '}
-            <Link href="/login" style={{ color: '#FF2D78', fontWeight: 500, textDecoration: 'none' }}>Se connecter</Link>
-          </p>
-        </div>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: D.text, margin: 0, letterSpacing: "-0.03em" }}>Crezzy</h1>
+        <p style={{ color: D.sub, fontSize: 13, margin: "4px 0 0" }}>Finance créateur</p>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+      <div style={{ background: D.card, borderRadius: 20, border: `1px solid ${D.border}`, padding: 32, width: "100%", maxWidth: 400, boxShadow: "0 8px 40px rgba(0,0,0,0.4)" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: D.text, margin: "0 0 4px", letterSpacing: "-0.02em" }}>Créer un compte</h2>
+        <p style={{ color: D.sub, fontSize: 13, margin: "0 0 24px" }}>Lance-toi 🚀</p>
+
+        <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Email</label>
+            <input className="input-field" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="toi@email.com" required />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Mot de passe</label>
+            <input className="input-field" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+          </div>
+          {error && <p style={{ fontSize: 13, color: "#FF3B30", background: "rgba(255,59,48,0.1)", padding: "10px 14px", borderRadius: 10, margin: 0 }}>{error}</p>}
+          <button type="submit" disabled={loading} style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: D.pink, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 6 }}>
+            {loading ? <><Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />Création...</> : "Créer mon compte"}
+          </button>
+        </form>
+
+        <p style={{ textAlign: "center", fontSize: 13, color: D.sub, marginTop: 20 }}>
+          Déjà un compte ?{" "}
+          <Link href="/login" style={{ color: D.pink, fontWeight: 600, textDecoration: "none" }}>Se connecter</Link>
+        </p>
+      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
-  )
+  );
 }

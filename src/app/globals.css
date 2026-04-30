@@ -4,35 +4,36 @@
 
 @layer base {
   :root {
-    --background: 245 245 247;
-    --foreground: 29 29 31;
-    --card: 255 255 255;
-    --card-foreground: 29 29 31;
-    --popover: 255 255 255;
-    --popover-foreground: 29 29 31;
-    --primary: 255 45 120;
-    --primary-foreground: 255 255 255;
-    --secondary: 242 242 247;
-    --secondary-foreground: 29 29 31;
-    --muted: 242 242 247;
-    --muted-foreground: 110 110 115;
-    --accent: 255 235 243;
-    --accent-foreground: 180 30 80;
-    --destructive: 255 59 48;
-    --destructive-foreground: 255 255 255;
-    --border: 229 229 234;
-    --input: 242 242 247;
-    --ring: 255 45 120;
+    /* Dark theme */
+    --background: 240 6% 7%;
+    --foreground: 240 5% 96%;
+    --card: 240 4% 11%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 4% 11%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 337 100% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3% 17%;
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 3% 17%;
+    --muted-foreground: 240 2% 57%;
+    --accent: 240 3% 17%;
+    --accent-foreground: 240 5% 96%;
+    --destructive: 4 86% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 3% 20%;
+    --input: 240 3% 17%;
+    --ring: 337 100% 59%;
     --radius: 0.75rem;
   }
 }
 
 @layer base {
   * { @apply border-border box-border; }
-  html { background: #F5F5F7; }
+  html { background: #111113; color-scheme: dark; }
   body {
-    background: #F5F5F7;
-    color: #1D1D1F;
+    background: #111113;
+    color: #F5F5F7;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -40,12 +41,12 @@
   }
 }
 
-/* ── Apple-style card ── */
+/* ── Dark card ── */
 .card {
-  background: #ffffff;
+  background: #1C1C1E;
   border-radius: 18px;
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
 }
 
 /* ── Brand pink button ── */
@@ -70,60 +71,54 @@
 
 /* ── Secondary button ── */
 .btn-secondary {
-  background: rgba(0,0,0,0.05);
-  color: #1D1D1F;
+  background: rgba(255,255,255,0.08);
+  color: #F5F5F7;
   border-radius: 980px;
   padding: 10px 22px;
   font-size: 14px;
   font-weight: 500;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.1);
   cursor: pointer;
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
-.btn-secondary:hover { background: rgba(0,0,0,0.08); }
+.btn-secondary:hover { background: rgba(255,255,255,0.12); }
 
-/* ── Input ── */
+/* ── Input field ── */
 .input-field {
   width: 100%;
-  background: #F5F5F7;
-  border: 1px solid transparent;
+  padding: 10px 14px;
   border-radius: 12px;
-  padding: 12px 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #2C2C2E;
+  color: #F5F5F7;
   font-size: 14px;
-  color: #1D1D1F;
-  outline: none;
-  transition: all 0.15s ease;
   font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
 }
-.input-field:focus {
-  border-color: #FF2D78;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(255,45,120,0.12);
-}
-.input-field::placeholder { color: #AEAEB2; }
+.input-field:focus { border-color: #FF2D78; box-shadow: 0 0 0 3px rgba(255,45,120,0.15); }
+.input-field::placeholder { color: #636366; }
 
-/* ── Badge ── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 980px;
-  font-size: 12px;
-  font-weight: 500;
+/* ── Gradient utilities ── */
+.gradient-primary { background: linear-gradient(135deg, #FF6B9D 0%, #FF2D78 100%); }
+.gradient-card {
+  background: linear-gradient(135deg, rgba(255,107,157,0.15) 0%, rgba(255,45,120,0.08) 100%);
+  border: 1px solid rgba(255,45,120,0.15);
 }
 
-/* ── Select ── */
-select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23AEAEB2' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-
-/* ── Scrollbar ── */
+/* Scrollbar dark */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #3A3A3C; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #48484A; }
 
-/* ── Gradient pink — logo/accent only ── */
-.gradient-primary { background: linear-gradient(135deg, #FF6B9D 0%, #FF2D78 100%); }
-.gradient-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); border-radius: 18px; }
+/* shadcn override for dark inputs */
+.dark input, input[type="text"], input[type="email"], input[type="password"],
+input[type="number"], input[type="date"], textarea, select {
+  background: #2C2C2E !important;
+  color: #F5F5F7 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}

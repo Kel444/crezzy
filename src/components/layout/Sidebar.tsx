@@ -25,34 +25,34 @@ export default function Sidebar() {
   }
 
   return (
-    <aside style={{ width: 220, minHeight: '100vh', background: '#fff', borderRight: '1px solid rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', padding: '20px 12px' }}>
+    <aside style={{ width: 220, minHeight: "100vh", background: "#1C1C1E", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", padding: "20px 12px" }}>
       {/* Logo */}
-      <div style={{ padding: '4px 8px', marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #FF6B9D 0%, #FF2D78 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(255,45,120,0.3)' }}>
-            <Sparkles style={{ width: 16, height: 16, color: '#fff' }} />
+      <div style={{ padding: "4px 8px", marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg, #FF6B9D 0%, #FF2D78 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(255,45,120,0.4)" }}>
+            <Sparkles style={{ width: 16, height: 16, color: "#fff" }} />
           </div>
-          <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #FF6B9D, #FF2D78)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.03em", background: "linear-gradient(135deg, #FF6B9D, #FF2D78)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Crezzy
           </span>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
         {nav.map(({ href, icon: Icon, label }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link key={href} href={href} style={{
-              display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10,
-              fontSize: 14, fontWeight: active ? 600 : 400, textDecoration: 'none', transition: 'all 0.12s ease',
-              color: active ? '#FF2D78' : '#6E6E73',
-              background: active ? 'rgba(255,45,120,0.08)' : 'transparent',
+              display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10,
+              fontSize: 14, fontWeight: active ? 600 : 400, textDecoration: "none", transition: "all 0.12s ease",
+              color: active ? "#FF2D78" : "#8E8E93",
+              background: active ? "rgba(255,45,120,0.12)" : "transparent",
             }}
-              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#F5F5F7'; }}
-              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              <Icon style={{ width: 16, height: 16, color: active ? '#FF2D78' : '#AEAEB2', flexShrink: 0 }} />
+              <Icon style={{ width: 16, height: 16, color: active ? "#FF2D78" : "#636366", flexShrink: 0 }} />
               {label}
             </Link>
           );
@@ -60,30 +60,21 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-        {(() => {
-          const active = pathname === "/parametres";
-          return (
-            <Link href="/parametres" style={{
-              display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10,
-              fontSize: 14, fontWeight: active ? 600 : 400, textDecoration: 'none', transition: 'all 0.12s ease',
-              color: active ? '#FF2D78' : '#6E6E73',
-              background: active ? 'rgba(255,45,120,0.08)' : 'transparent',
-            }}>
-              <Settings style={{ width: 16, height: 16, color: active ? '#FF2D78' : '#AEAEB2' }} />
-              Paramètres
-            </Link>
-          );
-        })()}
-        <button onClick={signOut} style={{
-          display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10,
-          fontSize: 14, fontWeight: 400, border: 'none', background: 'transparent', cursor: 'pointer',
-          color: '#AEAEB2', transition: 'all 0.12s ease', width: '100%', textAlign: 'left',
-        }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#FF3B30'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,59,48,0.06)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#AEAEB2'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 12, display: "flex", flexDirection: "column", gap: 2 }}>
+        <Link href="/parametres" style={{
+          display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10,
+          fontSize: 14, fontWeight: pathname === "/parametres" ? 600 : 400, textDecoration: "none",
+          color: pathname === "/parametres" ? "#FF2D78" : "#8E8E93",
+          background: pathname === "/parametres" ? "rgba(255,45,120,0.12)" : "transparent",
+        }}>
+          <Settings style={{ width: 16, height: 16, color: pathname === "/parametres" ? "#FF2D78" : "#636366" }} />
+          Paramètres
+        </Link>
+        <button onClick={signOut} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 14, fontWeight: 400, border: "none", background: "transparent", cursor: "pointer", color: "#636366", width: "100%", textAlign: "left" }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLElement).style.color = "#FF2D78"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#636366"; }}
         >
-          <LogOut style={{ width: 16, height: 16 }} />
+          <LogOut style={{ width: 16, height: 16, flexShrink: 0 }} />
           Déconnexion
         </button>
       </div>
