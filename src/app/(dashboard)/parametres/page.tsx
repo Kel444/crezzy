@@ -69,8 +69,7 @@ export default function ParametresPage() {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase.from('profiles').upsert({
-      id: user.id,
+    await supabase.from('profiles').update({
       full_name: form.full_name || null,
       email: form.email || null,
       siret: form.siret || null,
@@ -81,7 +80,7 @@ export default function ParametresPage() {
       date_debut_activite: form.date_debut_activite || null,
       youtube_api_key: form.youtube_api_key || null,
       activite_type: form.activite_type,
-    })
+    }).eq('user_id', user.id)
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
