@@ -58,7 +58,7 @@ export default function DashboardPage() {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-      <div style={{ width: 32, height: 32, border: '3px solid #F5F5F7', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ width: 32, height: 32, border: '3px solid #2C2C2E', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
@@ -69,10 +69,10 @@ export default function DashboardPage() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       <div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: '#1D1D1F', margin: 0 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: '#F5F5F7', margin: 0 }}>
           Bonjour{prenom ? ` ${prenom}` : ''} 👋
         </h1>
-        <p style={{ color: '#6E6E73', fontSize: 14, marginTop: 6 }}>{MOIS[mois-1]} {annee}</p>
+        <p style={{ color: '#8E8E93', fontSize: 14, marginTop: 6 }}>{MOIS[mois-1]} {annee}</p>
       </div>
 
       {pct >= 80 && (
@@ -100,18 +100,18 @@ export default function DashboardPage() {
           { label: 'Cotisations', val: eur(cotis), sub: `taux ${taux.toFixed(1)}%`, color: '#FF9500' },
           { label: 'Bénéfice net', val: eur(revAnnee - depDed), sub: 'après dépenses', color: revAnnee - depDed >= 0 ? '#34C759' : '#FF3B30' },
         ].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: '20px 20px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <p style={{ fontSize: 12, color: '#6E6E73', fontWeight: 500, margin: '0 0 10px', letterSpacing: '-0.01em' }}>{s.label}</p>
+          <div key={s.label} style={{ background: '#1C1C1E', borderRadius: 16, border: '1px solid rgba(255,255,255,0.07)', padding: '20px 20px 18px', boxShadow: 'none' }}>
+            <p style={{ fontSize: 12, color: '#8E8E93', fontWeight: 500, margin: '0 0 10px', letterSpacing: '-0.01em' }}>{s.label}</p>
             <p style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: s.color, margin: 0 }}>{s.val}</p>
-            <p style={{ fontSize: 11, color: '#AEAEB2', margin: '4px 0 0' }}>{s.sub}</p>
+            <p style={{ fontSize: 11, color: '#636366', margin: '4px 0 0' }}>{s.sub}</p>
           </div>
         ))}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
         {/* Chart */}
-        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#1D1D1F', letterSpacing: '-0.01em', margin: '0 0 20px' }}>Revenus {annee}</p>
+        <div style={{ background: '#1C1C1E', borderRadius: 18, border: '1px solid rgba(255,255,255,0.07)', padding: '24px', boxShadow: 'none' }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em', margin: '0 0 20px' }}>Revenus {annee}</p>
           <ResponsiveContainer width="100%" height={190}>
             <AreaChart data={chartData} margin={{ left: -10, right: 4 }}>
               <defs>
@@ -120,10 +120,10 @@ export default function DashboardPage() {
                   <stop offset="100%" stopColor="#FF2D78" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="2 4" stroke="rgba(0,0,0,0.05)" vertical={false} />
+              <CartesianGrid strokeDasharray="2 4" stroke="rgba(255,255,255,0.06)" vertical={false} />
               <XAxis dataKey="m" tick={{ fontSize: 11, fill: '#AEAEB2' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#AEAEB2' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}€`} />
-              <Tooltip contentStyle={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} formatter={(v: any) => [eur(Number(v)), 'Revenus']} />
+              <Tooltip contentStyle={{ background: '#1C1C1E', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} formatter={(v: any) => [eur(Number(v)), 'Revenus']} />
               <Area type="monotone" dataKey="v" stroke="#FF2D78" strokeWidth={2} fill="url(#g)" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
@@ -131,28 +131,28 @@ export default function DashboardPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Plafond */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#1D1D1F', margin: '0 0 12px' }}>Plafond micro-entreprise</p>
+          <div style={{ background: '#1C1C1E', borderRadius: 16, border: '1px solid rgba(255,255,255,0.07)', padding: 20, boxShadow: 'none' }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7', margin: '0 0 12px' }}>Plafond micro-entreprise</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, color: '#6E6E73' }}>Atteint</span>
+              <span style={{ fontSize: 12, color: '#8E8E93' }}>Atteint</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: pct >= 80 ? '#FF9500' : '#FF2D78' }}>{pct.toFixed(1)}%</span>
             </div>
-            <div style={{ height: 6, borderRadius: 3, background: '#F5F5F7', overflow: 'hidden' }}>
+            <div style={{ height: 6, borderRadius: 3, background: '#2C2C2E', overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: 3, background: pct >= 80 ? '#FF9500' : 'linear-gradient(90deg, #FF6B9D, #FF2D78)', width: `${pct}%`, transition: 'width 0.5s ease' }} />
             </div>
-            <p style={{ fontSize: 11, color: '#AEAEB2', margin: '8px 0 0' }}>{eur(revAnnee)} / {eur(PLAFOND)}</p>
+            <p style={{ fontSize: 11, color: '#636366', margin: '8px 0 0' }}>{eur(revAnnee)} / {eur(PLAFOND)}</p>
           </div>
 
           {/* URSSAF */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: '#1C1C1E', borderRadius: 16, border: '1px solid rgba(255,255,255,0.07)', padding: 20, boxShadow: 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <Calendar style={{ width: 14, height: 14, color: '#FF2D78' }} />
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1D1D1F', margin: 0 }}>Prochaine URSSAF</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7', margin: 0 }}>Prochaine URSSAF</p>
             </div>
-            <p style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#1D1D1F', margin: 0 }}>{echeance()}</p>
+            <p style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#F5F5F7', margin: 0 }}>{echeance()}</p>
             <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: 11, background: 'rgba(255,45,120,0.08)', color: '#FF2D78', padding: '3px 10px', borderRadius: 980, fontWeight: 500 }}>{freq}</span>
-              <span style={{ fontSize: 11, color: '#AEAEB2' }}>{eur(cotis)} à prévoir</span>
+              <span style={{ fontSize: 11, color: '#636366' }}>{eur(cotis)} à prévoir</span>
             </div>
           </div>
         </div>
