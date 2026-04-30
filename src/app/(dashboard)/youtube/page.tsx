@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Users, Eye, TrendingUp, ExternalLink, RefreshCw, Film, ThumbsUp, MessageSquare, LogIn, CheckCircle, AlertCircle } from 'lucide-react'
+import { Users, Eye, ExternalLink, RefreshCw, Film, Plus, X, AlertCircle, CheckCircle, ArrowRight, Key } from 'lucide-react'
 import Link from 'next/link'
 
 interface Channel {
@@ -23,246 +23,219 @@ function fmt(n: number | null) {
   return n.toLocaleString('fr-FR')
 }
 
-const S: React.CSSProperties = {
-  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
-}
+const S: React.CSSProperties = { fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }
 
 export default function YoutubePage() {
   const supabase = createClient()
   const [channels, setChannels] = useState<Channel[]>([])
+  const [hasApiKey, setHasApiKey] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
-  const [googleConnected, setGoogleConnected] = useState(false)
-  const [connectingGoogle, setConnectingGoogle] = useState(false)
-  const [error, setError] = useState('')
+  const [showAdd, setShowAdd] = useState(false)
+  const [handle, setHandle] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [addError, setAddError] = useState('')
+  const [syncing, setSyncing] = useState<string | null>(null)
 
-  useEffect(() => {
-    init()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
-  async function init() {
+  async function loadData() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-
-    // Check if Google is connected (has provider_token or google identity)
-    const { data: { session } } = await supabase.auth.getSession()
-    const identities = session?.user?.identities || []
-    const hasGoogle = identities.some((id: any) => id.provider === 'google')
-    setGoogleConnected(hasGoogle)
-
-    // Load saved channels
-    const { data } = await supabase
-      .from('youtube_channels')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at')
-    if (data) setChannels(data)
-
-    // If we have a provider_token from fresh Google OAuth, auto-sync
-    if (session?.provider_token && hasGoogle) {
-      await syncFromGoogle(session.provider_token, user.id)
-    }
+    const [{ data: prof }, { data: chans }] = await Promise.all([
+      supabase.from('profiles').select('youtube_api_key').eq('id', user.id).single(),
+      supabase.from('youtube_channels').select('*').eq('user_id', user.id).order('created_at'),
+    ])
+    setHasApiKey(!!prof?.youtube_api_key)
+    if (chans) setChannels(chans)
     setLoading(false)
   }
 
-  async function connectGoogle() {
-    setConnectingGoogle(true)
-    setError('')
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        scopes: 'https://www.googleapis.com/auth/youtube.readonly',
-        redirectTo: `${window.location.origin}/youtube`,
-        queryParams: { access_type: 'offline', prompt: 'consent' }
-      }
-    })
-    if (error) { setError('Erreur de connexion Google : ' + error.message); setConnectingGoogle(false) }
-  }
-
-  async function syncFromGoogle(providerToken: string, userId: string) {
-    setSyncing(true)
+  async function addChannel(e: React.FormEvent) {
+    e.preventDefault()
+    if (!handle.trim()) return
+    setAdding(true)
+    setAddError('')
     try {
-      const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true`,
-        { headers: { Authorization: `Bearer ${providerToken}` } }
-      )
+      const res = await fetch(`/api/youtube/channel?handle=${encodeURIComponent(handle.trim())}`)
       const data = await res.json()
-      if (data.items) {
-        for (const item of data.items) {
-          await supabase.from('youtube_channels').upsert({
-            user_id: userId,
-            channel_id: item.id,
-            channel_name: item.snippet.title,
-            thumbnail_url: item.snippet.thumbnails?.default?.url || null,
-            subscribers: parseInt(item.statistics.subscriberCount || '0'),
-            total_views: parseInt(item.statistics.viewCount || '0'),
-            video_count: parseInt(item.statistics.videoCount || '0'),
-            last_synced_at: new Date().toISOString(),
-          }, { onConflict: 'channel_id,user_id' })
-        }
-        const { data: updated } = await supabase.from('youtube_channels').select('*').eq('user_id', userId).order('created_at')
-        if (updated) setChannels(updated)
-      } else if (data.error) {
-        setError('Erreur YouTube : ' + data.error.message)
-      }
-    } catch (e) {
-      setError('Erreur lors de la synchronisation')
-    }
-    setSyncing(false)
+      if (!res.ok) { setAddError(data.error || 'Erreur inconnue'); setAdding(false); return }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      await supabase.from('youtube_channels').upsert({
+        user_id: user.id,
+        ...data,
+        last_synced_at: new Date().toISOString(),
+      }, { onConflict: 'channel_id,user_id' })
+      setShowAdd(false)
+      setHandle('')
+      loadData()
+    } catch { setAddError('Erreur réseau') }
+    setAdding(false)
   }
 
-  async function refreshSync() {
-    const { data: { session } } = await supabase.auth.getSession()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    if (session?.provider_token) {
-      await syncFromGoogle(session.provider_token, user.id)
-    } else {
-      // Re-auth to get fresh token
-      connectGoogle()
-    }
+  async function syncChannel(chan: Channel) {
+    setSyncing(chan.id)
+    try {
+      const res = await fetch(`/api/youtube/channel?handle=${chan.channel_id}`)
+      const data = await res.json()
+      if (res.ok) {
+        await supabase.from('youtube_channels').update({ ...data, last_synced_at: new Date().toISOString() }).eq('id', chan.id)
+        loadData()
+      }
+    } catch {}
+    setSyncing(null)
   }
 
   const totalSubs = channels.reduce((s, c) => s + (c.subscribers || 0), 0)
   const totalViews = channels.reduce((s, c) => s + (c.total_views || 0), 0)
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, ...S }}>
-      <div style={{ width: 32, height: 32, border: '3px solid #F5F5F7', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+      <div style={{ width: 28, height: 28, border: '3px solid #F5F5F7', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   return (
     <div style={{ ...S, display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: '#1D1D1F', margin: 0 }}>YouTube</h1>
           <p style={{ color: '#6E6E73', fontSize: 14, marginTop: 4 }}>Statistiques de tes chaînes</p>
         </div>
-        {channels.length > 0 && (
-          <button onClick={refreshSync} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 980, border: '1px solid rgba(0,0,0,0.1)', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#1D1D1F' }}>
-            <RefreshCw style={{ width: 14, height: 14, ...(syncing ? { animation: 'spin 0.7s linear infinite' } : {}) }} />
-            Synchroniser
+        {hasApiKey && (
+          <button onClick={() => setShowAdd(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 980, background: '#FF2D78', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+            <Plus style={{ width: 15, height: 15 }} />
+            Ajouter une chaîne
           </button>
         )}
       </div>
 
-      {error && (
-        <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(255,59,48,0.06)', border: '1px solid rgba(255,59,48,0.12)' }}>
-          <AlertCircle style={{ width: 16, height: 16, color: '#FF3B30', flexShrink: 0, marginTop: 1 }} />
-          <p style={{ fontSize: 13, color: '#FF3B30', margin: 0 }}>{error}</p>
-        </div>
-      )}
-
-      {/* Google Connect card */}
-      {!googleConnected ? (
-        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: 32, textAlign: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F5F5F7', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-            <svg width="28" height="28" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      {/* No API key — setup guide */}
+      {hasApiKey === false && (
+        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: 32, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Key style={{ width: 20, height: 20, color: '#6E6E73' }} />
+            </div>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 16, color: '#1D1D1F', margin: 0, letterSpacing: '-0.02em' }}>Configure ta clé YouTube API</p>
+              <p style={{ color: '#6E6E73', fontSize: 13, margin: '2px 0 0' }}>Gratuit — 2 minutes de setup</p>
+            </div>
           </div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: '#1D1D1F', margin: '0 0 8px' }}>Connecte ta chaîne YouTube</h2>
-          <p style={{ color: '#6E6E73', fontSize: 14, maxWidth: 380, margin: '0 auto 24px', lineHeight: 1.5 }}>
-            Connecte ton compte Google pour importer automatiquement tes chaînes YouTube et voir tes stats (abonnés, vues, vidéos) en temps réel.
-          </p>
-          <button onClick={connectGoogle} disabled={connectingGoogle} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 24px', borderRadius: 12,
-            background: '#fff', border: '1px solid rgba(0,0,0,0.12)', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-            color: '#1D1D1F', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', transition: 'all 0.15s ease'
-          }}>
-            {connectingGoogle ? (
-              <span style={{ width: 18, height: 18, border: '2px solid #E5E5EA', borderTopColor: '#1D1D1F', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            )}
-            Continuer avec Google
-          </button>
-          <p style={{ color: '#AEAEB2', fontSize: 12, marginTop: 16 }}>
-            Tes stats YouTube sont publiques — seul l'accès en lecture est demandé.
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(52,199,89,0.06)', border: '1px solid rgba(52,199,89,0.15)' }}>
-          <CheckCircle style={{ width: 16, height: 16, color: '#34C759' }} />
-          <p style={{ fontSize: 13, color: '#1D7A3B', margin: 0, fontWeight: 500 }}>Compte Google connecté — chaînes importées automatiquement</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              { n: 1, text: <>Va sur <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" style={{ color: '#FF2D78', textDecoration: 'none', fontWeight: 500 }}>Google Cloud Console</a> et active YouTube Data API v3</> },
+              { n: 2, text: <>Dans le menu <strong>Identifiants</strong>, clique sur <strong>Créer des identifiants → Clé API</strong></> },
+              { n: 3, text: <>Copie la clé (commence par <code style={{ background: '#F5F5F7', padding: '1px 6px', borderRadius: 4, fontSize: 12 }}>AIza</code>) et colle-la dans <Link href="/parametres" style={{ color: '#FF2D78', fontWeight: 500, textDecoration: 'none' }}>Paramètres → YouTube</Link></> },
+              { n: 4, text: 'Reviens ici pour ajouter tes chaînes en un clic' },
+            ].map(s => (
+              <div key={s.n} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,45,120,0.1)', color: '#FF2D78', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{s.n}</span>
+                <p style={{ fontSize: 14, color: '#3D3D3D', margin: 0, lineHeight: 1.5 }}>{s.text as any}</p>
+              </div>
+            ))}
+          </div>
+
+          <Link href="/parametres" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 20, padding: '10px 20px', borderRadius: 980, background: '#1D1D1F', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+            Aller dans Paramètres
+            <ArrowRight style={{ width: 14, height: 14 }} />
+          </Link>
         </div>
       )}
 
       {/* Stats globales */}
       {channels.length > 1 && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {[
-            { label: 'Abonnés total', value: fmt(totalSubs), icon: Users, color: '#FF2D78' },
-            { label: 'Vues totales', value: fmt(totalViews), icon: Eye, color: '#007AFF' },
+            { label: 'Abonnés total', value: fmt(totalSubs), color: '#FF2D78' },
+            { label: 'Vues totales', value: fmt(totalViews), color: '#007AFF' },
           ].map(s => (
-            <div key={s.label} style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <s.icon style={{ width: 16, height: 16, color: s.color }} />
-                <p style={{ fontSize: 12, color: '#6E6E73', margin: 0, fontWeight: 500 }}>{s.label}</p>
-              </div>
-              <p style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: '#1D1D1F', margin: 0 }}>{s.value}</p>
+            <div key={s.label} style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <p style={{ fontSize: 12, color: '#6E6E73', fontWeight: 500, margin: '0 0 8px' }}>{s.label}</p>
+              <p style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: s.color, margin: 0 }}>{s.value}</p>
             </div>
           ))}
         </div>
       )}
 
-      {/* Channels list */}
-      {channels.length === 0 && googleConnected && !syncing && (
-        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: 40, textAlign: 'center' }}>
-          <Film style={{ width: 36, height: 36, color: '#E5E5EA', margin: '0 auto 12px' }} />
-          <p style={{ color: '#6E6E73', fontSize: 14 }}>Aucune chaîne trouvée sur ce compte Google</p>
+      {/* Channels */}
+      {channels.length === 0 && hasApiKey && (
+        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: '48px 32px', textAlign: 'center' }}>
+          <Film style={{ width: 32, height: 32, color: '#E5E5EA', margin: '0 auto 12px' }} />
+          <p style={{ color: '#6E6E73', fontSize: 14, fontWeight: 500 }}>Aucune chaîne ajoutée</p>
+          <p style={{ color: '#AEAEB2', fontSize: 13, margin: '4px 0 0' }}>Clique sur "Ajouter une chaîne" pour commencer</p>
         </div>
       )}
 
       {channels.map(chan => (
-        <div key={chan.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 20 }}>
-          {chan.thumbnail_url ? (
-            <img src={chan.thumbnail_url} alt={chan.channel_name} style={{ width: 56, height: 56, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
-          ) : (
-            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'linear-gradient(135deg, #FF6B9D, #FF2D78)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Film style={{ width: 24, height: 24, color: '#fff' }} />
-            </div>
-          )}
+        <div key={chan.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: 22, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 18 }}>
+          {chan.thumbnail_url
+            ? <img src={chan.thumbnail_url} alt={chan.channel_name} style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
+            : <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #FF6B9D, #FF2D78)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Film style={{ width: 22, height: 22, color: '#fff' }} /></div>
+          }
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: '#1D1D1F', margin: 0 }}>{chan.channel_name}</h3>
-              <a href={`https://youtube.com/channel/${chan.channel_id}`} target="_blank" style={{ color: '#AEAEB2' }}>
-                <ExternalLink style={{ width: 14, height: 14 }} />
-              </a>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1D1D1F', margin: 0, letterSpacing: '-0.02em' }}>{chan.channel_name}</h3>
+              <a href={`https://youtube.com/channel/${chan.channel_id}`} target="_blank" style={{ color: '#AEAEB2' }}><ExternalLink style={{ width: 13, height: 13 }} /></a>
             </div>
-            <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
+            <div style={{ display: 'flex', gap: 18, marginTop: 8 }}>
               {[
                 { icon: Users, val: fmt(chan.subscribers), label: 'abonnés', color: '#FF2D78' },
                 { icon: Eye, val: fmt(chan.total_views), label: 'vues', color: '#007AFF' },
                 { icon: Film, val: String(chan.video_count || 0), label: 'vidéos', color: '#FF9500' },
               ].map(s => (
-                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <s.icon style={{ width: 14, height: 14, color: s.color }} />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1F' }}>{s.val}</span>
-                  <span style={{ fontSize: 12, color: '#AEAEB2' }}>{s.label}</span>
+                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <s.icon style={{ width: 13, height: 13, color: s.color }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#1D1D1F' }}>{s.val}</span>
+                  <span style={{ fontSize: 11, color: '#AEAEB2' }}>{s.label}</span>
                 </div>
               ))}
             </div>
-            {chan.last_synced_at && (
-              <p style={{ fontSize: 11, color: '#AEAEB2', marginTop: 6 }}>
-                Mis à jour le {new Date(chan.last_synced_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-              </p>
-            )}
+            {chan.last_synced_at && <p style={{ fontSize: 11, color: '#AEAEB2', marginTop: 5 }}>Mis à jour {new Date(chan.last_synced_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>}
           </div>
-          <Link href={`/youtube/${chan.channel_id}`} style={{ padding: '8px 16px', borderRadius: 980, background: '#F5F5F7', fontSize: 13, fontWeight: 500, color: '#1D1D1F', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-            Voir détails
-          </Link>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => syncChannel(chan)} disabled={syncing === chan.id} style={{ padding: '7px 14px', borderRadius: 980, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', color: '#1D1D1F', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <RefreshCw style={{ width: 12, height: 12, ...(syncing === chan.id ? { animation: 'spin 0.7s linear infinite' } : {}) }} />
+              Sync
+            </button>
+            <Link href={`/youtube/${chan.channel_id}`} style={{ padding: '7px 14px', borderRadius: 980, background: '#F5F5F7', fontSize: 12, fontWeight: 500, color: '#1D1D1F', textDecoration: 'none' }}>Détails</Link>
+          </div>
         </div>
       ))}
 
-      {syncing && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 16, borderRadius: 12, background: '#F5F5F7' }}>
-          <span style={{ width: 16, height: 16, border: '2px solid #E5E5EA', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />
-          <p style={{ fontSize: 13, color: '#6E6E73', margin: 0 }}>Synchronisation de tes chaînes...</p>
+      {/* Modal add channel */}
+      {showAdd && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 8px 40px rgba(0,0,0,0.12)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#1D1D1F', margin: 0, letterSpacing: '-0.02em' }}>Ajouter une chaîne</h2>
+              <button onClick={() => { setShowAdd(false); setAddError(''); setHandle('') }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#AEAEB2' }}><X style={{ width: 20, height: 20 }} /></button>
+            </div>
+            <form onSubmit={addChannel} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#1D1D1F', marginBottom: 6 }}>Handle ou ID de la chaîne</label>
+                <input value={handle} onChange={e => setHandle(e.target.value)} className="input-field" placeholder="@tonnom ou UCxxxxxx" required />
+                <p style={{ fontSize: 11, color: '#AEAEB2', marginTop: 6 }}>Trouve ton handle sur ta page YouTube (ex : @nomdelachaine)</p>
+              </div>
+              {addError && (
+                <div style={{ display: 'flex', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,59,48,0.06)', border: '1px solid rgba(255,59,48,0.12)' }}>
+                  <AlertCircle style={{ width: 15, height: 15, color: '#FF3B30', flexShrink: 0, marginTop: 1 }} />
+                  <p style={{ fontSize: 13, color: '#FF3B30', margin: 0 }}>{addError}</p>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="button" onClick={() => { setShowAdd(false); setAddError(''); setHandle('') }} style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1px solid rgba(0,0,0,0.1)', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: '#1D1D1F' }}>Annuler</button>
+                <button type="submit" disabled={adding} style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: '#FF2D78', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  {adding ? <span style={{ width: 15, height: 15, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} /> : 'Ajouter'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
