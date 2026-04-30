@@ -43,7 +43,7 @@ export default function YoutubePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const [{ data: prof }, { data: chans }] = await Promise.all([
-      supabase.from('profiles').select('youtube_api_key').eq('id', user.id).single(),
+      supabase.from('profiles').select('youtube_api_key').eq('user_id', user.id).single(),
       supabase.from('youtube_channels').select('*').eq('user_id', user.id).order('created_at'),
     ])
     setHasApiKey(!!prof?.youtube_api_key)

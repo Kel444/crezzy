@@ -13,14 +13,20 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
-  const { data: profile } = await supabase.from('profiles').select('youtube_api_key').eq('id', user.id).single()
-  const apiKey = profile?.youtube_api_key
+  // Fix: query by user_id (FK to auth.users), not id (profile PK)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('youtube_api_key')
+    .eq('user_id', user.id)
+    .single()
+
+  // Use profile key, then fall back to server-side env var
+  const apiKey = profile?.youtube_api_key || process.env.YOUTUBE_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'Clé API YouTube manquante. Ajoutez-la dans Paramètres.' }, { status: 400 })
 
   const handle = req.nextUrl.searchParams.get('handle') || ''
   if (!handle) return NextResponse.json({ error: 'Handle manquant' }, { status: 400 })
 
-  // Try by handle (@name) then by channel ID
   const isId = handle.startsWith('UC')
   const url = isId
     ? `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${handle}&key=${apiKey}`

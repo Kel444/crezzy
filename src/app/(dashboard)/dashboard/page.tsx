@@ -26,7 +26,7 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const [{ data: p }, { data: r }, { data: d }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('profiles').select('*').eq('user_id', user.id).single(),
         supabase.from('revenus').select('*').eq('user_id', user.id).eq('annee', annee),
         supabase.from('depenses').select('*').eq('user_id', user.id),
       ])

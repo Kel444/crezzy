@@ -73,7 +73,7 @@ export default function FacturationPage() {
     if (!user) return
 
     const [{ data: prof }, { data: facts }] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('profiles').select('*').eq('user_id', user.id).single(),
       supabase.from('factures').select('*').eq('user_id', user.id).is('deleted_at', null).order('date_emission', { ascending: false }),
     ])
 

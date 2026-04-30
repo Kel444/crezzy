@@ -42,7 +42,7 @@ export default function ParametresPage() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).single()
     if (data) {
       setForm({
         full_name: data.full_name || '',
