@@ -6,7 +6,8 @@ import { Save, User, CreditCard, PlayCircle, CheckCircle } from 'lucide-react'
 
 interface Profile {
   id: string
-  full_name: string | null
+  nom: string | null
+  prenom: string | null
   email: string | null
   siret: string | null
   adresse: string | null
@@ -35,7 +36,7 @@ export default function ParametresPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [form, setForm] = useState({
-    full_name: '', email: '', siret: '', adresse: '',
+    nom: '', prenom: '', email: '', siret: '', adresse: '',
     acre: false, taux_imposition: 22, frequence_urssaf: 'mensuel',
     date_debut_activite: '', youtube_api_key: '', activite_type: 'services',
   })
@@ -49,7 +50,8 @@ export default function ParametresPage() {
     const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).single()
     if (data) {
       setForm({
-        full_name: data.full_name || '',
+        nom: data.nom || '',
+        prenom: data.prenom || '',
         email: data.email || user.email || '',
         siret: data.siret || '',
         adresse: data.adresse || '',
@@ -74,7 +76,8 @@ export default function ParametresPage() {
       const { error: updateError, data: updatedRows } = await supabase
         .from('profiles')
         .update({
-          full_name: form.full_name || null,
+          nom: form.nom || null,
+          prenom: form.prenom || null,
           email: form.email || null,
           siret: form.siret || null,
           adresse: form.adresse || null,
@@ -102,7 +105,8 @@ export default function ParametresPage() {
           .from('profiles')
           .insert({
             user_id: user.id,
-            full_name: form.full_name || null,
+            nom: form.nom || null,
+            prenom: form.prenom || null,
             email: form.email || user.email || null,
             siret: form.siret || null,
             adresse: form.adresse || null,
@@ -162,9 +166,15 @@ export default function ParametresPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Nom complet</label>
-                <input value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} style={inputStyle} placeholder="Votre nom" />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Nom</label>
+                <input value={form.nom} onChange={e => setForm({...form, nom: e.target.value})} style={inputStyle} placeholder="Nom" />
               </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Prénom</label>
+                <input value={form.prenom} onChange={e => setForm({...form, prenom: e.target.value})} style={inputStyle} placeholder="Prénom" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Email</label>
                 <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} style={inputStyle} placeholder="votre@email.com" />
