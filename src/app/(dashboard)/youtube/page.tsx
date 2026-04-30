@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { PlusCircle, X, Youtube, Users, Eye, TrendingUp, ExternalLink, AlertCircle } from 'lucide-react'
+import { PlusCircle, X, PlayCircle, Users, Eye, TrendingUp, ExternalLink, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface YoutubeChannel {
@@ -183,7 +183,7 @@ export default function YoutubePage() {
 
       {channels.length === 0 ? (
         <div className="gradient-card rounded-2xl flex flex-col items-center justify-center py-16 text-gray-400">
-          <Youtube className="w-12 h-12 mb-3 opacity-30" />
+          <PlayCircle className="w-12 h-12 mb-3 opacity-30" />
           <p className="font-medium">Aucune chaine ajoutee</p>
           <p className="text-sm mt-1">Ajoutez votre premiere chaine YouTube ci-dessus</p>
         </div>
@@ -197,7 +197,7 @@ export default function YoutubePage() {
                     className="w-14 h-14 rounded-2xl object-cover shadow-sm" />
                 ) : (
                   <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center">
-                    <Youtube className="w-7 h-7 text-white" />
+                    <PlayCircle className="w-7 h-7 text-white" />
                   </div>
                 )}
                 <div className="flex-1">

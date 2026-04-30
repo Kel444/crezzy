@@ -4,12 +4,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard, TrendingUp, Receipt, FileText, Settings,
-  LogOut, Youtube, Briefcase, Wallet, Sparkles
+  LogOut, PlayCircle, Briefcase, Wallet, Sparkles
 } from "lucide-react";
 
 const nav = [
   { href: "/dashboard",    icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/youtube",      icon: Youtube,         label: "YouTube" },
+  { href: "/youtube",      icon: PlayCircle,         label: "YouTube" },
   { href: "/revenus",      icon: TrendingUp,      label: "Revenus" },
   { href: "/depenses",     icon: Wallet,          label: "Dépenses" },
   { href: "/facturation",  icon: FileText,        label: "Facturation" },

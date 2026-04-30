@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Save, User, CreditCard, Youtube, CheckCircle } from 'lucide-react'
+import { Save, User, CreditCard, PlayCircle, CheckCircle } from 'lucide-react'
 
 interface Profile {
   id: string
@@ -231,7 +231,7 @@ export default function ParametresPage() {
         <div className="gradient-card rounded-2xl p-6 space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-7 h-7 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Youtube className="w-3.5 h-3.5 text-white" />
+              <PlayCircle className="w-3.5 h-3.5 text-white" />
             </div>
             <h2 className="font-semibold text-gray-800">YouTube</h2>
           </div>

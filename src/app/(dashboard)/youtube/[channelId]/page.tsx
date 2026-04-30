@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Users, Eye, TrendingUp, Youtube, RefreshCw, Film, ThumbsUp, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Users, Eye, TrendingUp, PlayCircle, RefreshCw, Film, ThumbsUp, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 
 interface YoutubeChannel {
@@ -139,7 +139,7 @@ export default function ChannelDetailPage({ params }: { params: { channelId: str
             <img src={channel.thumbnail_url} alt={channel.channel_name} className="w-10 h-10 rounded-xl object-cover" />
           ) : (
             <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
-              <Youtube className="w-5 h-5 text-white" />
+              <PlayCircle className="w-5 h-5 text-white" />
             </div>
           )}
           <div>
