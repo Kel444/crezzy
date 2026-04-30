@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { PlusCircle, X, PlayCircle, Users, Eye, TrendingUp, ExternalLink, AlertCircle } from 'lucide-react'
+import { Users, Eye, TrendingUp, ExternalLink, RefreshCw, Film, ThumbsUp, MessageSquare, LogIn, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
-interface YoutubeChannel {
+interface Channel {
   id: string
   channel_id: string
   channel_name: string
@@ -16,293 +16,253 @@ interface YoutubeChannel {
   last_synced_at: string | null
 }
 
-interface Profile {
-  youtube_api_key: string | null
+function fmt(n: number | null) {
+  if (!n) return '0'
+  if (n >= 1_000_000) return `${(n/1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n/1_000).toFixed(1)}k`
+  return n.toLocaleString('fr-FR')
 }
 
-function formatNum(n: number | null) {
-  if (n === null) return '—'
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
-  return n.toString()
+const S: React.CSSProperties = {
+  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
 }
 
 export default function YoutubePage() {
   const supabase = createClient()
-  const [channels, setChannels] = useState<YoutubeChannel[]>([])
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [channels, setChannels] = useState<Channel[]>([])
   const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [channelInput, setChannelInput] = useState('')
-  const [addError, setAddError] = useState('')
-  const [adding, setAdding] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [googleConnected, setGoogleConnected] = useState(false)
+  const [connectingGoogle, setConnectingGoogle] = useState(false)
+  const [error, setError] = useState('')
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    init()
+  }, [])
 
-  async function loadData() {
+  async function init() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const [{ data: prof }, { data: chans }] = await Promise.all([
-      supabase.from('profiles').select('youtube_api_key').eq('id', user.id).single(),
-      supabase.from('youtube_channels').select('*').eq('user_id', user.id).order('created_at'),
-    ])
-    if (prof) setProfile(prof)
-    if (chans) setChannels(chans)
+
+    // Check if Google is connected (has provider_token or google identity)
+    const { data: { session } } = await supabase.auth.getSession()
+    const identities = session?.user?.identities || []
+    const hasGoogle = identities.some((id: any) => id.provider === 'google')
+    setGoogleConnected(hasGoogle)
+
+    // Load saved channels
+    const { data } = await supabase
+      .from('youtube_channels')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at')
+    if (data) setChannels(data)
+
+    // If we have a provider_token from fresh Google OAuth, auto-sync
+    if (session?.provider_token && hasGoogle) {
+      await syncFromGoogle(session.provider_token, user.id)
+    }
     setLoading(false)
   }
 
-  async function fetchChannelData(channelId: string, apiKey: string) {
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${apiKey}`
-    const res = await fetch(url)
-    const data = await res.json()
-    if (!data.items || data.items.length === 0) {
-      // Try by username/handle
-      const url2 = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${channelId}&key=${apiKey}`
-      const res2 = await fetch(url2)
-      const data2 = await res2.json()
-      if (!data2.items || data2.items.length === 0) return null
-      return data2.items[0]
-    }
-    return data.items[0]
+  async function connectGoogle() {
+    setConnectingGoogle(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        scopes: 'https://www.googleapis.com/auth/youtube.readonly',
+        redirectTo: `${window.location.origin}/youtube`,
+        queryParams: { access_type: 'offline', prompt: 'consent' }
+      }
+    })
+    if (error) { setError('Erreur de connexion Google : ' + error.message); setConnectingGoogle(false) }
   }
 
-  async function addChannel(e: React.FormEvent) {
-    e.preventDefault()
-    if (!profile?.youtube_api_key) {
-      setAddError('Ajoutez votre cle API YouTube dans les Parametres')
-      return
-    }
-    setAdding(true)
-    setAddError('')
+  async function syncFromGoogle(providerToken: string, userId: string) {
+    setSyncing(true)
     try {
-      const item = await fetchChannelData(channelInput.trim(), profile.youtube_api_key)
-      if (!item) {
-        setAddError('Chaine introuvable. Verifiez l ID ou le handle (@chaine)')
-        setAdding(false)
-        return
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true`,
+        { headers: { Authorization: `Bearer ${providerToken}` } }
+      )
+      const data = await res.json()
+      if (data.items) {
+        for (const item of data.items) {
+          await supabase.from('youtube_channels').upsert({
+            user_id: userId,
+            channel_id: item.id,
+            channel_name: item.snippet.title,
+            thumbnail_url: item.snippet.thumbnails?.default?.url || null,
+            subscribers: parseInt(item.statistics.subscriberCount || '0'),
+            total_views: parseInt(item.statistics.viewCount || '0'),
+            video_count: parseInt(item.statistics.videoCount || '0'),
+            last_synced_at: new Date().toISOString(),
+          }, { onConflict: 'channel_id,user_id' })
+        }
+        const { data: updated } = await supabase.from('youtube_channels').select('*').eq('user_id', userId).order('created_at')
+        if (updated) setChannels(updated)
+      } else if (data.error) {
+        setError('Erreur YouTube : ' + data.error.message)
       }
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { error } = await supabase.from('youtube_channels').upsert({
-        user_id: user.id,
-        channel_id: item.id,
-        channel_name: item.snippet.title,
-        thumbnail_url: item.snippet.thumbnails?.default?.url || null,
-        subscribers: parseInt(item.statistics.subscriberCount || '0'),
-        total_views: parseInt(item.statistics.viewCount || '0'),
-        video_count: parseInt(item.statistics.videoCount || '0'),
-        last_synced_at: new Date().toISOString(),
-      }, { onConflict: 'channel_id,user_id' })
-      if (error) { setAddError(error.message); setAdding(false); return }
-      setShowForm(false)
-      setChannelInput('')
-      loadData()
-    } catch (err) {
-      setAddError('Erreur reseau. Verifiez votre cle API.')
+    } catch (e) {
+      setError('Erreur lors de la synchronisation')
     }
-    setAdding(false)
+    setSyncing(false)
   }
 
-  async function syncChannel(chan: YoutubeChannel) {
-    if (!profile?.youtube_api_key) return
-    setSyncing(chan.id)
-    try {
-      const item = await fetchChannelData(chan.channel_id, profile.youtube_api_key)
-      if (item) {
-        await supabase.from('youtube_channels').update({
-          channel_name: item.snippet.title,
-          thumbnail_url: item.snippet.thumbnails?.default?.url || null,
-          subscribers: parseInt(item.statistics.subscriberCount || '0'),
-          total_views: parseInt(item.statistics.viewCount || '0'),
-          video_count: parseInt(item.statistics.videoCount || '0'),
-          last_synced_at: new Date().toISOString(),
-        }).eq('id', chan.id)
-        loadData()
-      }
-    } catch {}
-    setSyncing(null)
+  async function refreshSync() {
+    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    if (session?.provider_token) {
+      await syncFromGoogle(session.provider_token, user.id)
+    } else {
+      // Re-auth to get fresh token
+      connectGoogle()
+    }
   }
 
   const totalSubs = channels.reduce((s, c) => s + (c.subscribers || 0), 0)
   const totalViews = channels.reduce((s, c) => s + (c.total_views || 0), 0)
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, ...S }}>
+      <div style={{ width: 32, height: 32, border: '3px solid #F5F5F7', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div style={{ ...S, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">YouTube</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Statistiques de vos chaines</p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: '#1D1D1F', margin: 0 }}>YouTube</h1>
+          <p style={{ color: '#6E6E73', fontSize: 14, marginTop: 4 }}>Statistiques de tes chaînes</p>
         </div>
-        <button onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 gradient-primary text-white px-4 py-2.5 rounded-xl font-medium shadow-lg hover:shadow-purple-200 transition-all hover:scale-[1.02]">
-          <PlusCircle className="w-4 h-4" />
-          Ajouter une chaine
-        </button>
+        {channels.length > 0 && (
+          <button onClick={refreshSync} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 980, border: '1px solid rgba(0,0,0,0.1)', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#1D1D1F' }}>
+            <RefreshCw style={{ width: 14, height: 14, ...(syncing ? { animation: 'spin 0.7s linear infinite' } : {}) }} />
+            Synchroniser
+          </button>
+        )}
       </div>
 
-      {/* Explication connexion YouTube */}
-      <div className="rounded-2xl border border-pink-100 bg-pink-50/60 p-5 space-y-3">
-        <p className="font-semibold text-gray-800 text-sm">Comment connecter ta chaîne YouTube ?</p>
-        <div className="space-y-2 text-sm text-gray-600">
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">1</span>
-            <p>Va sur <a href="https://console.cloud.google.com" target="_blank" className="text-pink-600 font-medium underline underline-offset-2">console.cloud.google.com</a> et connecte-toi avec ton compte Google.</p>
-          </div>
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">2</span>
-            <p>Crée un projet, active <strong>YouTube Data API v3</strong>, puis dans Identifiants clique sur <em>Créer des identifiants → Clé API</em>.</p>
-          </div>
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">3</span>
-            <p>Copie la clé API (commence par <code className="bg-pink-100 px-1 rounded text-xs">AIza</code>) et colle-la dans <Link href="/parametres" className="text-pink-600 font-medium underline underline-offset-2">Paramètres → YouTube</Link>.</p>
-          </div>
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">4</span>
-            <p>Reviens ici et clique sur <strong>Ajouter une chaîne</strong> en entrant l'ID de ta chaîne (ex : <code className="bg-pink-100 px-1 rounded text-xs">@tonnom</code>).</p>
-          </div>
+      {error && (
+        <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(255,59,48,0.06)', border: '1px solid rgba(255,59,48,0.12)' }}>
+          <AlertCircle style={{ width: 16, height: 16, color: '#FF3B30', flexShrink: 0, marginTop: 1 }} />
+          <p style={{ fontSize: 13, color: '#FF3B30', margin: 0 }}>{error}</p>
         </div>
-        <p className="text-xs text-gray-400 pt-1 border-t border-pink-100">⚠️ Cette API donne accès aux stats publiques (abonnés, vues, vidéos). Les revenus AdSense ne sont pas accessibles via API — saisis-les manuellement dans <Link href="/revenus" className="text-pink-600 underline underline-offset-2">Revenus</Link>.</p>
-      </div>
+      )}
 
-      {!profile?.youtube_api_key && (
-        <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4">
-          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
-          <p className="text-sm text-amber-700">
-            Clé API manquante — <Link href="/parametres" className="underline font-medium">Paramètres → YouTube</Link>
+      {/* Google Connect card */}
+      {!googleConnected ? (
+        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: 32, textAlign: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F5F5F7', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <svg width="28" height="28" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          </div>
+          <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: '#1D1D1F', margin: '0 0 8px' }}>Connecte ta chaîne YouTube</h2>
+          <p style={{ color: '#6E6E73', fontSize: 14, maxWidth: 380, margin: '0 auto 24px', lineHeight: 1.5 }}>
+            Connecte ton compte Google pour importer automatiquement tes chaînes YouTube et voir tes stats (abonnés, vues, vidéos) en temps réel.
+          </p>
+          <button onClick={connectGoogle} disabled={connectingGoogle} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 24px', borderRadius: 12,
+            background: '#fff', border: '1px solid rgba(0,0,0,0.12)', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+            color: '#1D1D1F', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', transition: 'all 0.15s ease'
+          }}>
+            {connectingGoogle ? (
+              <span style={{ width: 18, height: 18, border: '2px solid #E5E5EA', borderTopColor: '#1D1D1F', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            )}
+            Continuer avec Google
+          </button>
+          <p style={{ color: '#AEAEB2', fontSize: 12, marginTop: 16 }}>
+            Tes stats YouTube sont publiques — seul l'accès en lecture est demandé.
           </p>
         </div>
-      )}
-
-      {channels.length > 1 && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="gradient-card rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="w-4 h-4 text-pink-500" />
-              <p className="text-xs text-gray-500 font-medium">Total abonnes</p>
-            </div>
-            <p className="text-2xl font-bold text-pink-700">{formatNum(totalSubs)}</p>
-          </div>
-          <div className="gradient-card rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Eye className="w-4 h-4 text-blue-500" />
-              <p className="text-xs text-gray-500 font-medium">Total vues</p>
-            </div>
-            <p className="text-2xl font-bold text-blue-700">{formatNum(totalViews)}</p>
-          </div>
-        </div>
-      )}
-
-      {channels.length === 0 ? (
-        <div className="gradient-card rounded-2xl flex flex-col items-center justify-center py-16 text-gray-400">
-          <PlayCircle className="w-12 h-12 mb-3 opacity-30" />
-          <p className="font-medium">Aucune chaine ajoutee</p>
-          <p className="text-sm mt-1">Ajoutez votre premiere chaine YouTube ci-dessus</p>
-        </div>
       ) : (
-        <div className="grid gap-4">
-          {channels.map(chan => (
-            <div key={chan.id} className="gradient-card rounded-2xl p-5">
-              <div className="flex items-center gap-4">
-                {chan.thumbnail_url ? (
-                  <img src={chan.thumbnail_url} alt={chan.channel_name}
-                    className="w-14 h-14 rounded-2xl object-cover shadow-sm" />
-                ) : (
-                  <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center">
-                    <PlayCircle className="w-7 h-7 text-white" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-gray-900">{chan.channel_name}</h3>
-                    <a href={`https://youtube.com/channel/${chan.channel_id}`} target="_blank"
-                      className="text-gray-400 hover:text-pink-500 transition-colors">
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-5 mt-2">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-pink-400" />
-                      <span className="text-sm font-semibold text-pink-700">{formatNum(chan.subscribers)}</span>
-                      <span className="text-xs text-gray-400">abonnes</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Eye className="w-3.5 h-3.5 text-blue-400" />
-                      <span className="text-sm font-semibold text-blue-700">{formatNum(chan.total_views)}</span>
-                      <span className="text-xs text-gray-400">vues</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <TrendingUp className="w-3.5 h-3.5 text-pink-400" />
-                      <span className="text-sm font-semibold text-pink-700">{chan.video_count || '—'}</span>
-                      <span className="text-xs text-gray-400">videos</span>
-                    </div>
-                  </div>
-                  {chan.last_synced_at && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Synchro : {new Date(chan.last_synced_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => syncChannel(chan)} disabled={syncing === chan.id || !profile?.youtube_api_key}
-                    className="text-xs border border-pink-200 text-pink-600 px-3 py-1.5 rounded-lg hover:bg-pink-50 transition-colors disabled:opacity-40 flex items-center gap-1">
-                    {syncing === chan.id ? (
-                      <><div className="w-3 h-3 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" /> Sync...</>
-                    ) : 'Synchroniser'}
-                  </button>
-                  <Link href={`/youtube/${chan.channel_id}`}
-                    className="text-xs gradient-primary text-white px-3 py-1.5 rounded-lg shadow-sm hover:shadow-purple-200 transition-all">
-                    Details
-                  </Link>
-                </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(52,199,89,0.06)', border: '1px solid rgba(52,199,89,0.15)' }}>
+          <CheckCircle style={{ width: 16, height: 16, color: '#34C759' }} />
+          <p style={{ fontSize: 13, color: '#1D7A3B', margin: 0, fontWeight: 500 }}>Compte Google connecté — chaînes importées automatiquement</p>
+        </div>
+      )}
+
+      {/* Stats globales */}
+      {channels.length > 1 && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {[
+            { label: 'Abonnés total', value: fmt(totalSubs), icon: Users, color: '#FF2D78' },
+            { label: 'Vues totales', value: fmt(totalViews), icon: Eye, color: '#007AFF' },
+          ].map(s => (
+            <div key={s.label} style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <s.icon style={{ width: 16, height: 16, color: s.color }} />
+                <p style={{ fontSize: 12, color: '#6E6E73', margin: 0, fontWeight: 500 }}>{s.label}</p>
               </div>
+              <p style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: '#1D1D1F', margin: 0 }}>{s.value}</p>
             </div>
           ))}
         </div>
       )}
 
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-gray-900">Ajouter une chaine</h2>
-              <button onClick={() => { setShowForm(false); setAddError('') }} className="p-2 rounded-xl hover:bg-gray-100">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+      {/* Channels list */}
+      {channels.length === 0 && googleConnected && !syncing && (
+        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: 40, textAlign: 'center' }}>
+          <Film style={{ width: 36, height: 36, color: '#E5E5EA', margin: '0 auto 12px' }} />
+          <p style={{ color: '#6E6E73', fontSize: 14 }}>Aucune chaîne trouvée sur ce compte Google</p>
+        </div>
+      )}
+
+      {channels.map(chan => (
+        <div key={chan.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 20 }}>
+          {chan.thumbnail_url ? (
+            <img src={chan.thumbnail_url} alt={chan.channel_name} style={{ width: 56, height: 56, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'linear-gradient(135deg, #FF6B9D, #FF2D78)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Film style={{ width: 24, height: 24, color: '#fff' }} />
             </div>
-            <form onSubmit={addChannel} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ID ou handle de la chaine</label>
-                <input required value={channelInput} onChange={e => setChannelInput(e.target.value)}
-                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-                  placeholder="UCxxxxxx ou @votrenom" />
-                <p className="text-xs text-gray-400 mt-1">Trouvez l ID dans l URL de votre chaine YouTube</p>
-              </div>
-              {addError && (
-                <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                  <p className="text-xs text-red-600">{addError}</p>
+          )}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: '#1D1D1F', margin: 0 }}>{chan.channel_name}</h3>
+              <a href={`https://youtube.com/channel/${chan.channel_id}`} target="_blank" style={{ color: '#AEAEB2' }}>
+                <ExternalLink style={{ width: 14, height: 14 }} />
+              </a>
+            </div>
+            <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
+              {[
+                { icon: Users, val: fmt(chan.subscribers), label: 'abonnés', color: '#FF2D78' },
+                { icon: Eye, val: fmt(chan.total_views), label: 'vues', color: '#007AFF' },
+                { icon: Film, val: String(chan.video_count || 0), label: 'vidéos', color: '#FF9500' },
+              ].map(s => (
+                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <s.icon style={{ width: 14, height: 14, color: s.color }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1F' }}>{s.val}</span>
+                  <span style={{ fontSize: 12, color: '#AEAEB2' }}>{s.label}</span>
                 </div>
-              )}
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => { setShowForm(false); setAddError('') }}
-                  className="flex-1 border border-pink-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-pink-50 transition-colors">
-                  Annuler
-                </button>
-                <button type="submit" disabled={adding}
-                  className="flex-1 gradient-primary text-white py-2.5 rounded-xl font-medium shadow-md disabled:opacity-60 flex items-center justify-center gap-2">
-                  {adding ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Recherche...</> : 'Ajouter'}
-                </button>
-              </div>
-            </form>
+              ))}
+            </div>
+            {chan.last_synced_at && (
+              <p style={{ fontSize: 11, color: '#AEAEB2', marginTop: 6 }}>
+                Mis à jour le {new Date(chan.last_synced_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
           </div>
+          <Link href={`/youtube/${chan.channel_id}`} style={{ padding: '8px 16px', borderRadius: 980, background: '#F5F5F7', fontSize: 13, fontWeight: 500, color: '#1D1D1F', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Voir détails
+          </Link>
+        </div>
+      ))}
+
+      {syncing && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 16, borderRadius: 12, background: '#F5F5F7' }}>
+          <span style={{ width: 16, height: 16, border: '2px solid #E5E5EA', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />
+          <p style={{ fontSize: 13, color: '#6E6E73', margin: 0 }}>Synchronisation de tes chaînes...</p>
         </div>
       )}
     </div>

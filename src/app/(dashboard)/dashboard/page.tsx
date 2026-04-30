@@ -1,17 +1,16 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, TrendingDown, Euro, Calendar, AlertTriangle, Wallet, CheckCircle } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-const PLAFOND_MICRO = 77700
+const PLAFOND = 77700
+const MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
+const S = { fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }
 
-function formatEur(n: number) {
+function eur(n: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 }
-
-const MOIS_NOMS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
 export default function DashboardPage() {
   const supabase = createClient()
@@ -19,158 +18,141 @@ export default function DashboardPage() {
   const [depenses, setDepenses] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-
   const annee = new Date().getFullYear()
   const mois = new Date().getMonth() + 1
 
   useEffect(() => {
-    async function load() {
+    (async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const [{ data: prof }, { data: revData }, { data: depData }] = await Promise.all([
+      const [{ data: p }, { data: r }, { data: d }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
         supabase.from('revenus').select('*').eq('user_id', user.id).eq('annee', annee),
         supabase.from('depenses').select('*').eq('user_id', user.id),
       ])
-      if (prof) setProfile(prof)
-      if (revData) setRevenus(revData)
-      if (depData) setDepenses(depData)
+      if (p) setProfile(p)
+      if (r) setRevenus(r)
+      if (d) setDepenses(d)
       setLoading(false)
-    }
-    load()
+    })()
   }, [])
 
-  const tauxBrut = profile?.taux_imposition ?? 22
-  const acre = profile?.acre ?? false
-  const tauxEffectif = acre ? tauxBrut * 0.5 : tauxBrut
-  const frequence = profile?.frequence_urssaf || 'mensuel'
+  const taux = profile?.acre ? (profile.taux_imposition ?? 22) * 0.5 : (profile?.taux_imposition ?? 22)
+  const freq = profile?.frequence_urssaf || 'mensuel'
+  const revMois = revenus.filter(r => r.mois === mois).reduce((s, r) => s + r.montant_eur, 0)
+  const revAnnee = revenus.reduce((s, r) => s + r.montant_eur, 0)
+  const depDed = depenses.filter(d => d.deductible).reduce((s, d) => s + d.montant, 0)
+  const cotis = revAnnee * (taux / 100)
+  const pct = Math.min((revAnnee / PLAFOND) * 100, 100)
 
-  const revenusMoisCourant = revenus.filter(r => r.mois === mois).reduce((s: number, r: any) => s + r.montant_eur, 0)
-  const revenusAnnee = revenus.reduce((s: number, r: any) => s + r.montant_eur, 0)
-  const depensesDeductibles = depenses.filter((d: any) => d.deductible).reduce((s: number, d: any) => s + d.montant, 0)
-  const beneficeNet = revenusAnnee - depensesDeductibles
-  const cotisations = revenusAnnee * (tauxEffectif / 100)
-  const pctPlafond = Math.min((revenusAnnee / PLAFOND_MICRO) * 100, 100)
-
-  const chartData = MOIS_NOMS.map((nom, i) => ({
-    mois: nom,
-    revenus: revenus.filter((r: any) => r.mois === i + 1).reduce((s: number, r: any) => s + r.montant_eur, 0),
+  const chartData = MOIS.map((m, i) => ({
+    m,
+    v: revenus.filter(r => r.mois === i + 1).reduce((s, r) => s + r.montant_eur, 0)
   }))
 
-  function prochainEcheance() {
-    if (frequence === 'mensuel') {
-      const last = new Date(annee, mois, 0)
-      return last.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
-    }
-    if (mois <= 1) return '31 janvier'
-    if (mois <= 4) return '30 avril'
-    if (mois <= 7) return '31 juillet'
-    return '31 octobre'
+  function echeance() {
+    if (freq === 'mensuel') return new Date(annee, mois, 0).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+    if (mois <= 1) return '31 janvier'; if (mois <= 4) return '30 avril'
+    if (mois <= 7) return '31 juillet'; return '31 octobre'
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin" />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+      <div style={{ width: 32, height: 32, border: '3px solid #F5F5F7', borderTopColor: '#FF2D78', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   const prenom = profile?.full_name?.split(' ')[0] || ''
-
   return (
-    <div className="space-y-6">
+    <div style={{ ...S, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: '#1D1D1F', margin: 0 }}>
           Bonjour{prenom ? ` ${prenom}` : ''} 👋
         </h1>
-        <p className="text-gray-400 text-sm mt-0.5">
-          {MOIS_NOMS[mois - 1]} {annee} — voilà où tu en es
-        </p>
+        <p style={{ color: '#6E6E73', fontSize: 14, marginTop: 6 }}>{MOIS[mois-1]} {annee}</p>
       </div>
 
-      {pctPlafond >= 80 && (
-        <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-100">
-          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+      {pct >= 80 && (
+        <div style={{ display: 'flex', gap: 12, padding: '14px 18px', borderRadius: 14, background: 'rgba(255,149,0,0.07)', border: '1px solid rgba(255,149,0,0.2)' }}>
+          <AlertTriangle style={{ width: 18, height: 18, color: '#FF9500', flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p className="text-sm font-semibold text-amber-700">Plafond micro-entreprise bientôt atteint</p>
-            <p className="text-sm text-amber-500 mt-0.5">{pctPlafond.toFixed(0)}% du plafond de {formatEur(PLAFOND_MICRO)} atteint.</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#B36800', margin: 0 }}>Plafond micro-entreprise bientôt atteint</p>
+            <p style={{ fontSize: 13, color: '#B36800', margin: '2px 0 0', opacity: 0.8 }}>{pct.toFixed(0)}% des {eur(PLAFOND)} atteints</p>
           </div>
         </div>
       )}
 
-      {acre && (
-        <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-green-50 border border-green-100">
-          <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-          <p className="text-sm text-green-700 font-medium">ACRE active — cotisations à {tauxEffectif.toFixed(1)}% (au lieu de {tauxBrut}%)</p>
+      {profile?.acre && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(52,199,89,0.06)', border: '1px solid rgba(52,199,89,0.15)' }}>
+          <CheckCircle style={{ width: 16, height: 16, color: '#34C759' }} />
+          <p style={{ fontSize: 13, color: '#1D7A3B', margin: 0, fontWeight: 500 }}>ACRE active — cotisations réduites à {taux.toFixed(1)}%</p>
         </div>
       )}
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         {[
-          { label: `Revenus ${MOIS_NOMS[mois-1]}`, value: formatEur(revenusMoisCourant), sub: 'ce mois', icon: Euro, iconColor: 'text-pink-400', bg: 'bg-pink-50', text: 'text-pink-700' },
-          { label: 'Total annuel', value: formatEur(revenusAnnee), sub: `cumul ${annee}`, icon: TrendingUp, iconColor: 'text-rose-400', bg: 'bg-rose-50', text: 'text-rose-700' },
-          { label: 'Cotisations', value: formatEur(cotisations), sub: `taux ${tauxEffectif.toFixed(1)}%`, icon: TrendingDown, iconColor: 'text-orange-400', bg: 'bg-orange-50', text: 'text-orange-700' },
-          { label: 'Bénéfice net', value: formatEur(beneficeNet), sub: 'après dépenses', icon: Wallet, iconColor: beneficeNet >= 0 ? 'text-emerald-400' : 'text-red-400', bg: beneficeNet >= 0 ? 'bg-emerald-50' : 'bg-red-50', text: beneficeNet >= 0 ? 'text-emerald-700' : 'text-red-600' },
+          { label: `Revenus ${MOIS[mois-1]}`, val: eur(revMois), sub: 'ce mois', color: '#FF2D78' },
+          { label: `Total ${annee}`, val: eur(revAnnee), sub: 'annuel', color: '#007AFF' },
+          { label: 'Cotisations', val: eur(cotis), sub: `taux ${taux.toFixed(1)}%`, color: '#FF9500' },
+          { label: 'Bénéfice net', val: eur(revAnnee - depDed), sub: 'après dépenses', color: revAnnee - depDed >= 0 ? '#34C759' : '#FF3B30' },
         ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-4`}>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-gray-400">{s.label}</p>
-              <s.icon className={`w-4 h-4 ${s.iconColor}`} />
-            </div>
-            <p className={`text-xl font-bold ${s.text}`}>{s.value}</p>
-            <p className="text-xs text-gray-400 mt-0.5 capitalize">{s.sub}</p>
+          <div key={s.label} style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: '20px 20px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <p style={{ fontSize: 12, color: '#6E6E73', fontWeight: 500, margin: '0 0 10px', letterSpacing: '-0.01em' }}>{s.label}</p>
+            <p style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: s.color, margin: 0 }}>{s.val}</p>
+            <p style={{ fontSize: 11, color: '#AEAEB2', margin: '4px 0 0' }}>{s.sub}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5">
-        {/* Graphique */}
-        <div className="gradient-card rounded-2xl p-5 lg:col-span-2">
-          <h2 className="font-semibold text-gray-800 mb-4 text-sm">Revenus {annee}</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={chartData}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+        {/* Chart */}
+        <div style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(0,0,0,0.06)', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#1D1D1F', letterSpacing: '-0.01em', margin: '0 0 20px' }}>Revenus {annee}</p>
+          <ResponsiveContainer width="100%" height={190}>
+            <AreaChart data={chartData} margin={{ left: -10, right: 4 }}>
               <defs>
-                <linearGradient id="pinkGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f472b6" stopOpacity={0} />
+                <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#FF2D78" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="#FF2D78" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#fce7f3" />
-              <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#d1a0b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#d1a0b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}€`} />
-              <Tooltip
-                contentStyle={{ background: 'white', border: '1px solid #fce7f3', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 20px rgba(236,72,153,0.08)' }}
-                formatter={(v: any) => [formatEur(Number(v)), 'Revenus']}
-              />
-              <Area type="monotone" dataKey="revenus" stroke="#ec4899" fill="url(#pinkGrad)" strokeWidth={2.5} dot={false} />
+              <CartesianGrid strokeDasharray="2 4" stroke="rgba(0,0,0,0.05)" vertical={false} />
+              <XAxis dataKey="m" tick={{ fontSize: 11, fill: '#AEAEB2' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#AEAEB2' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}€`} />
+              <Tooltip contentStyle={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} formatter={(v: any) => [eur(Number(v)), 'Revenus']} />
+              <Area type="monotone" dataKey="v" stroke="#FF2D78" strokeWidth={2} fill="url(#g)" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Plafond + URSSAF */}
-        <div className="space-y-4">
-          <div className="gradient-card rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Plafond micro-entreprise</h3>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-400 text-xs">Atteint</span>
-              <span className={`font-bold text-sm ${pctPlafond >= 80 ? 'text-amber-500' : 'text-pink-600'}`}>{pctPlafond.toFixed(1)}%</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Plafond */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#1D1D1F', margin: '0 0 12px' }}>Plafond micro-entreprise</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 12, color: '#6E6E73' }}>Atteint</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: pct >= 80 ? '#FF9500' : '#FF2D78' }}>{pct.toFixed(1)}%</span>
             </div>
-            <div className="w-full bg-pink-100 rounded-full h-2">
-              <div className={`h-2 rounded-full transition-all ${pctPlafond >= 80 ? 'bg-amber-400' : 'gradient-primary'}`}
-                style={{ width: `${pctPlafond}%` }} />
+            <div style={{ height: 6, borderRadius: 3, background: '#F5F5F7', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 3, background: pct >= 80 ? '#FF9500' : 'linear-gradient(90deg, #FF6B9D, #FF2D78)', width: `${pct}%`, transition: 'width 0.5s ease' }} />
             </div>
-            <p className="text-xs text-gray-400 mt-2">{formatEur(revenusAnnee)} / {formatEur(PLAFOND_MICRO)}</p>
+            <p style={{ fontSize: 11, color: '#AEAEB2', margin: '8px 0 0' }}>{eur(revAnnee)} / {eur(PLAFOND)}</p>
           </div>
 
-          <div className="gradient-card rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-4 h-4 text-pink-400" />
-              <h3 className="text-sm font-semibold text-gray-700">Prochaine URSSAF</h3>
+          {/* URSSAF */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <Calendar style={{ width: 14, height: 14, color: '#FF2D78' }} />
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#1D1D1F', margin: 0 }}>Prochaine URSSAF</p>
             </div>
-            <p className="text-xl font-bold text-pink-600">{prochainEcheance()}</p>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-medium capitalize">{frequence}</span>
-              <span className="text-xs text-gray-400">{formatEur(cotisations)} à prévoir</span>
+            <p style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#1D1D1F', margin: 0 }}>{echeance()}</p>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 11, background: 'rgba(255,45,120,0.08)', color: '#FF2D78', padding: '3px 10px', borderRadius: 980, fontWeight: 500 }}>{freq}</span>
+              <span style={{ fontSize: 11, color: '#AEAEB2' }}>{eur(cotis)} à prévoir</span>
             </div>
           </div>
         </div>
