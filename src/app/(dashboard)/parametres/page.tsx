@@ -18,22 +18,26 @@ interface Profile {
   activite_type: string | null
 }
 
+const D = {
+  card: '#1C1C1E', card2: '#2C2C2E', card3: '#3A3A3C', border: 'rgba(255,255,255,0.07)',
+  text: '#F5F5F7', sub: '#8E8E93', muted: '#636366', pink: '#FF2D78',
+  green: '#30D158', blue: '#0A84FF',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', background: D.card2, border: `1px solid ${D.border}`, borderRadius: 12,
+  padding: '10px 14px', fontSize: 14, color: D.text, outline: 'none', boxSizing: 'border-box',
+}
+
 export default function ParametresPage() {
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [form, setForm] = useState({
-    full_name: '',
-    email: '',
-    siret: '',
-    adresse: '',
-    acre: false,
-    taux_imposition: 22,
-    frequence_urssaf: 'mensuel',
-    date_debut_activite: '',
-    youtube_api_key: '',
-    activite_type: 'services',
+    full_name: '', email: '', siret: '', adresse: '',
+    acre: false, taux_imposition: 22, frequence_urssaf: 'mensuel',
+    date_debut_activite: '', youtube_api_key: '', activite_type: 'services',
   })
 
   useEffect(() => { loadProfile() }, [])
@@ -84,179 +88,164 @@ export default function ParametresPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+      <div style={{ width: 28, height: 28, border: `3px solid ${D.card2}`, borderTopColor: D.pink, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   const tauxEffectif = form.acre ? (form.taux_imposition * 0.5) : form.taux_imposition
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Parametres</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Configurez votre profil et vos preferences fiscales</p>
+    <div style={{ maxWidth: 640 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} input[type=range]{accent-color:${D.pink}}`}</style>
+
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: D.text, margin: 0 }}>Paramètres</h1>
+        <p style={{ color: D.sub, fontSize: 14, marginTop: 4 }}>Profil et préférences fiscales</p>
       </div>
 
-      <form onSubmit={saveProfile} className="space-y-5">
-        <div className="gradient-card rounded-2xl p-6 space-y-4">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 gradient-primary rounded-lg flex items-center justify-center">
-              <User className="w-3.5 h-3.5 text-white" />
-            </div>
-            <h2 className="font-semibold text-gray-800">Profil</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-              <input value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})}
-                className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-                placeholder="Votre nom" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
-                className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-                placeholder="votre@email.com" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">SIRET</label>
-              <input value={form.siret} onChange={e => setForm({...form, siret: e.target.value})}
-                className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-                placeholder="123 456 789 00012" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type d activite</label>
-              <select value={form.activite_type} onChange={e => setForm({...form, activite_type: e.target.value})}
-                className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
-                <option value="services">Prestations de services</option>
-                <option value="vente">Vente de marchandises</option>
-                <option value="liberal">Profession liberale</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-            <input value={form.adresse} onChange={e => setForm({...form, adresse: e.target.value})}
-              className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-              placeholder="Votre adresse complete" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date de debut d activite</label>
-            <input type="date" value={form.date_debut_activite} onChange={e => setForm({...form, date_debut_activite: e.target.value})}
-              className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300" />
-          </div>
-        </div>
+      <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        <div className="gradient-card rounded-2xl p-6 space-y-5">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 gradient-primary rounded-lg flex items-center justify-center">
-              <CreditCard className="w-3.5 h-3.5 text-white" />
+        {/* Profil */}
+        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#FF2D78,#FF6B9D)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User style={{ width: 14, height: 14, color: '#fff' }} />
             </div>
-            <h2 className="font-semibold text-gray-800">Fiscalite et Cotisations</h2>
+            <h2 style={{ fontWeight: 700, fontSize: 15, color: D.text, margin: 0 }}>Profil</h2>
           </div>
-
-          <div className="flex items-center justify-between p-4 bg-pink-50 rounded-xl border border-pink-100">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Nom complet</label>
+                <input value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} style={inputStyle} placeholder="Votre nom" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Email</label>
+                <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} style={inputStyle} placeholder="votre@email.com" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>SIRET</label>
+                <input value={form.siret} onChange={e => setForm({...form, siret: e.target.value})} style={inputStyle} placeholder="123 456 789 00012" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Type d'activité</label>
+                <select value={form.activite_type} onChange={e => setForm({...form, activite_type: e.target.value})} style={inputStyle}>
+                  <option value="services">Prestations de services</option>
+                  <option value="vente">Vente de marchandises</option>
+                  <option value="liberal">Profession libérale</option>
+                </select>
+              </div>
+            </div>
             <div>
-              <p className="font-medium text-gray-800 text-sm">Beneficiaire de l ACRE</p>
-              <p className="text-xs text-gray-500 mt-0.5">Reduction de 50% sur vos cotisations la 1ere annee</p>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Adresse</label>
+              <input value={form.adresse} onChange={e => setForm({...form, adresse: e.target.value})} style={inputStyle} placeholder="Adresse complète" />
             </div>
-            <button type="button" onClick={() => setForm({...form, acre: !form.acre})}
-              className={`relative w-12 h-6 rounded-full transition-colors ${form.acre ? 'bg-pink-500' : 'bg-gray-300'}`}>
-              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.acre ? 'translate-x-6' : 'translate-x-0.5'}`} />
-            </button>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">Taux de cotisations URSSAF</label>
-              <span className="text-sm font-bold text-pink-700 bg-pink-100 px-2.5 py-0.5 rounded-full">
-                {form.taux_imposition}%
-                {form.acre && <span className="text-green-600 ml-1">(effectif : {tauxEffectif.toFixed(1)}%)</span>}
-              </span>
-            </div>
-            <input type="range" min="0" max="50" step="0.5" value={form.taux_imposition}
-              onChange={e => setForm({...form, taux_imposition: parseFloat(e.target.value)})}
-              className="w-full accent-pink-500" />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>0%</span>
-              <span className="text-pink-600">22% micro-services</span>
-              <span>50%</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              {[
-                { label: 'Micro services', value: 22 },
-                { label: 'Micro vente', value: 12.3 },
-                { label: 'Liberal', value: 21.1 },
-              ].map(p => (
-                <button key={p.label} type="button"
-                  onClick={() => setForm({...form, taux_imposition: p.value})}
-                  className={`text-xs py-1.5 px-2 rounded-lg border transition-colors ${
-                    form.taux_imposition === p.value
-                      ? 'border-pink-400 bg-pink-100 text-pink-700 font-medium'
-                      : 'border-pink-200 text-gray-600 hover:bg-pink-50'
-                  }`}>
-                  {p.label} ({p.value}%)
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Frequence de paiement URSSAF</label>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: 'mensuel', label: 'Mensuel', desc: 'Paiement chaque mois' },
-                { value: 'trimestriel', label: 'Trimestriel', desc: 'Paiement tous les 3 mois' },
-              ].map(opt => (
-                <button key={opt.value} type="button"
-                  onClick={() => setForm({...form, frequence_urssaf: opt.value})}
-                  className={`p-3 rounded-xl border text-left transition-all ${
-                    form.frequence_urssaf === opt.value
-                      ? 'border-pink-400 bg-pink-50 shadow-sm'
-                      : 'border-pink-200 hover:border-purple-300'
-                  }`}>
-                  <p className={`font-medium text-sm ${form.frequence_urssaf === opt.value ? 'text-pink-700' : 'text-gray-700'}`}>
-                    {opt.label}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{opt.desc}</p>
-                </button>
-              ))}
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Date de début d'activité</label>
+              <input type="date" value={form.date_debut_activite} onChange={e => setForm({...form, date_debut_activite: e.target.value})} style={inputStyle} />
             </div>
           </div>
         </div>
 
-        <div className="gradient-card rounded-2xl p-6 space-y-4">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <PlayCircle className="w-3.5 h-3.5 text-white" />
+        {/* Fiscalité */}
+        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#BF5AF2,#0A84FF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CreditCard style={{ width: 14, height: 14, color: '#fff' }} />
             </div>
-            <h2 className="font-semibold text-gray-800">YouTube</h2>
+            <h2 style={{ fontWeight: 700, fontSize: 15, color: D.text, margin: 0 }}>Fiscalité & Cotisations</h2>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+            {/* ACRE toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: D.card2, borderRadius: 14, border: `1px solid ${D.border}` }}>
+              <div>
+                <p style={{ fontWeight: 600, color: D.text, fontSize: 14, margin: '0 0 3px' }}>Bénéficiaire de l'ACRE</p>
+                <p style={{ fontSize: 12, color: D.muted, margin: 0 }}>Réduction de 50% sur tes cotisations la 1ère année</p>
+              </div>
+              <button type="button" onClick={() => setForm({...form, acre: !form.acre})}
+                style={{ position: 'relative', width: 46, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: form.acre ? D.pink : D.card3, transition: 'background 0.2s', flexShrink: 0 }}>
+                <span style={{ position: 'absolute', top: 2, width: 20, height: 20, background: '#fff', borderRadius: '50%', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.2s', left: form.acre ? 24 : 2 }} />
+              </button>
+            </div>
+
+            {/* Taux slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <label style={{ fontSize: 13, fontWeight: 500, color: D.sub }}>Taux de cotisations URSSAF</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: D.pink, background: 'rgba(255,45,120,0.12)', padding: '2px 10px', borderRadius: 980 }}>{form.taux_imposition}%</span>
+                  {form.acre && <span style={{ fontSize: 12, color: D.green, background: 'rgba(48,209,88,0.12)', padding: '2px 10px', borderRadius: 980 }}>effectif : {tauxEffectif.toFixed(1)}%</span>}
+                </div>
+              </div>
+              <input type="range" min="0" max="50" step="0.5" value={form.taux_imposition}
+                onChange={e => setForm({...form, taux_imposition: parseFloat(e.target.value)})}
+                style={{ width: '100%' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: D.muted, marginTop: 4 }}>
+                <span>0%</span><span style={{ color: D.pink }}>22% micro-services</span><span>50%</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 12 }}>
+                {[{ label: 'Micro services', value: 22 }, { label: 'Micro vente', value: 12.3 }, { label: 'Libéral', value: 21.1 }].map(p => (
+                  <button key={p.label} type="button"
+                    onClick={() => setForm({...form, taux_imposition: p.value})}
+                    style={{ padding: '8px 6px', borderRadius: 10, border: `1px solid ${form.taux_imposition === p.value ? D.pink : D.border}`, background: form.taux_imposition === p.value ? 'rgba(255,45,120,0.12)' : 'transparent', fontSize: 11, color: form.taux_imposition === p.value ? D.pink : D.sub, cursor: 'pointer', fontWeight: form.taux_imposition === p.value ? 600 : 400, transition: 'all 0.15s' }}>
+                    {p.label}<br />{p.value}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Fréquence URSSAF */}
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 10 }}>Fréquence de paiement URSSAF</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[
+                  { value: 'mensuel', label: 'Mensuel', desc: 'Paiement chaque mois' },
+                  { value: 'trimestriel', label: 'Trimestriel', desc: 'Paiement tous les 3 mois' },
+                ].map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => setForm({...form, frequence_urssaf: opt.value})}
+                    style={{ padding: '12px 14px', borderRadius: 12, border: `1px solid ${form.frequence_urssaf === opt.value ? D.pink : D.border}`, background: form.frequence_urssaf === opt.value ? 'rgba(255,45,120,0.08)' : 'transparent', textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s' }}>
+                    <p style={{ fontWeight: 600, fontSize: 13, color: form.frequence_urssaf === opt.value ? D.pink : D.text, margin: '0 0 3px' }}>{opt.label}</p>
+                    <p style={{ fontSize: 11, color: D.muted, margin: 0 }}>{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* YouTube */}
+        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#FF3B30,#FF2D78)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PlayCircle style={{ width: 14, height: 14, color: '#fff' }} />
+            </div>
+            <h2 style={{ fontWeight: 700, fontSize: 15, color: D.text, margin: 0 }}>YouTube API</h2>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cle API YouTube Data v3</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>Clé API YouTube Data v3</label>
             <input type="password" value={form.youtube_api_key} onChange={e => setForm({...form, youtube_api_key: e.target.value})}
-              className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 font-mono"
-              placeholder="AIza..." />
-            <p className="text-xs text-gray-400 mt-1.5">
-              Obtenez une cle gratuite sur{' '}
-              <a href="https://console.cloud.google.com" target="_blank" className="text-pink-600 hover:underline">
-                Google Cloud Console
-              </a>
+              style={{ ...inputStyle, fontFamily: 'monospace' }} placeholder="AIza..." />
+            <p style={{ fontSize: 12, color: D.muted, marginTop: 8 }}>
+              Obtiens une clé gratuite sur{' '}
+              <a href="https://console.cloud.google.com" target="_blank" style={{ color: D.pink }}>Google Cloud Console</a>
             </p>
           </div>
         </div>
 
         <button type="submit" disabled={saving}
-          className="w-full gradient-primary text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-pink-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
+          style={{ width: '100%', padding: '14px 0', borderRadius: 14, border: 'none', background: saved ? D.green : D.pink, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: saving ? 0.7 : 1, transition: 'background 0.3s' }}>
           {saved ? (
-            <><CheckCircle className="w-5 h-5" /> Enregistre !</>
+            <><CheckCircle style={{ width: 18, height: 18 }} />Enregistré !</>
           ) : saving ? (
-            <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Enregistrement...</>
+            <><div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />Enregistrement...</>
           ) : (
-            <><Save className="w-5 h-5" /> Enregistrer les parametres</>
+            <><Save style={{ width: 18, height: 18 }} />Enregistrer les paramètres</>
           )}
         </button>
       </form>

@@ -14,18 +14,37 @@ interface Revenu {
 }
 
 const SOURCES = [
-  { value: 'adsense', label: 'AdSense', color: 'bg-orange-100 text-orange-700' },
-  { value: 'sponsoring', label: 'Sponsoring', color: 'bg-pink-100 text-pink-700' },
-  { value: 'membership', label: 'Memberships', color: 'bg-purple-100 text-purple-700' },
-  { value: 'super-chat', label: 'Super Chats', color: 'bg-blue-100 text-blue-700' },
-  { value: 'merch', label: 'Merch', color: 'bg-green-100 text-green-700' },
-  { value: 'autre', label: 'Autre', color: 'bg-gray-100 text-gray-600' },
+  { value: 'adsense', label: 'AdSense', dark: 'rgba(255,159,10,0.15)', text: '#FF9F0A' },
+  { value: 'sponsoring', label: 'Sponsoring', dark: 'rgba(255,45,120,0.15)', text: '#FF2D78' },
+  { value: 'membership', label: 'Memberships', dark: 'rgba(191,90,242,0.15)', text: '#BF5AF2' },
+  { value: 'super-chat', label: 'Super Chats', dark: 'rgba(10,132,255,0.15)', text: '#0A84FF' },
+  { value: 'merch', label: 'Merch', dark: 'rgba(48,209,88,0.15)', text: '#30D158' },
+  { value: 'autre', label: 'Autre', dark: 'rgba(142,142,147,0.15)', text: '#8E8E93' },
 ]
 
 const MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
+const D = {
+  card: '#1C1C1E', card2: '#2C2C2E', border: 'rgba(255,255,255,0.07)',
+  text: '#F5F5F7', sub: '#8E8E93', muted: '#636366', pink: '#FF2D78',
+}
+
 function getSourceStyle(val: string) {
   return SOURCES.find(s => s.value === val) || SOURCES[SOURCES.length - 1]
+}
+
+function InputField({ label, children }: { label: string, children: React.ReactNode }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: D.sub, marginBottom: 6 }}>{label}</label>
+      {children}
+    </div>
+  )
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', background: D.card2, border: `1px solid ${D.border}`, borderRadius: 12,
+  padding: '10px 14px', fontSize: 14, color: D.text, outline: 'none', boxSizing: 'border-box',
 }
 
 export default function RevenusPage() {
@@ -87,7 +106,6 @@ export default function RevenusPage() {
     total: revenus.filter(r => r.source === s.value).reduce((sum, r) => sum + r.montant_eur, 0)
   })).filter(s => s.total > 0)
 
-  // Group by month
   const byMois = Array.from({ length: 12 }, (_, i) => ({
     mois: i + 1,
     label: MOIS[i],
@@ -96,50 +114,55 @@ export default function RevenusPage() {
   })).filter(m => m.total > 0).reverse()
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin" />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+      <div style={{ width: 28, height: 28, border: `3px solid ${D.card2}`, borderTopColor: D.pink, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .rev-row:hover{background:rgba(255,255,255,0.03)} .del-btn{opacity:0} .rev-row:hover .del-btn{opacity:1}`}</style>
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Revenus</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Toutes vos rentrées d'argent en un coup d'oeil</p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: D.text, margin: 0 }}>Revenus</h1>
+          <p style={{ color: D.sub, fontSize: 14, marginTop: 4 }}>Toutes tes rentrées d'argent en un coup d'œil</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <select value={filterAnnee} onChange={e => setFilterAnnee(parseInt(e.target.value))}
-            className="border border-pink-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white">
+            style={{ background: D.card2, border: `1px solid ${D.border}`, borderRadius: 12, padding: '8px 14px', fontSize: 13, color: D.text, outline: 'none', cursor: 'pointer' }}>
             {[2024, 2025, 2026, 2027].map(y => <option key={y}>{y}</option>)}
           </select>
           <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 gradient-primary text-white px-4 py-2.5 rounded-xl font-medium shadow-sm shadow-pink-200 hover:shadow-pink-300 transition-all hover:scale-[1.02]">
-            <PlusCircle className="w-4 h-4" />
-            Ajouter
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 980, background: D.pink, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+            <PlusCircle style={{ width: 15, height: 15 }} />Ajouter
           </button>
         </div>
       </div>
 
-      {/* Total + répartition sources */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="gradient-card rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Euro className="w-4 h-4 text-pink-400" />
-            <p className="text-xs font-medium text-gray-400">Total {filterAnnee}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <Euro style={{ width: 14, height: 14, color: D.pink }} />
+            <p style={{ fontSize: 11, fontWeight: 600, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Total {filterAnnee}</p>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{totalAnnee.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</p>
+          <p style={{ fontSize: 34, fontWeight: 700, color: D.text, margin: 0, letterSpacing: '-0.04em' }}>
+            {totalAnnee.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+          </p>
         </div>
-        <div className="gradient-card rounded-2xl p-5">
-          <p className="text-xs font-medium text-gray-400 mb-3">Répartition par source</p>
+        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 14px' }}>Répartition</p>
           {bySource.length === 0 ? (
-            <p className="text-sm text-gray-300">Aucun revenu saisi</p>
+            <p style={{ fontSize: 13, color: D.muted }}>Aucun revenu saisi</p>
           ) : (
-            <div className="space-y-1.5">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {bySource.map(s => (
-                <div key={s.value} className="flex items-center justify-between">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
-                  <span className="text-sm font-semibold text-gray-700">{s.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</span>
+                <div key={s.value} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 10px', borderRadius: 980, background: s.dark, color: s.text }}>{s.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: D.text }}>
+                    {s.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                  </span>
                 </div>
               ))}
             </div>
@@ -147,101 +170,87 @@ export default function RevenusPage() {
         </div>
       </div>
 
-      {/* Liste par mois */}
       {byMois.length === 0 ? (
-        <div className="gradient-card rounded-2xl flex flex-col items-center justify-center py-16 text-gray-300">
-          <TrendingUp className="w-10 h-10 mb-3" />
-          <p className="font-medium text-gray-400">Aucun revenu pour {filterAnnee}</p>
-          <p className="text-sm mt-1">Ajoutez votre première rentrée ci-dessus</p>
+        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 32px' }}>
+          <TrendingUp style={{ width: 36, height: 36, color: D.muted, marginBottom: 12 }} />
+          <p style={{ fontWeight: 600, color: D.sub, fontSize: 15, margin: '0 0 4px' }}>Aucun revenu pour {filterAnnee}</p>
+          <p style={{ fontSize: 13, color: D.muted, margin: 0 }}>Ajoute ta première rentrée ci-dessus</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {byMois.map(m => (
-            <div key={m.mois} className="gradient-card rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 bg-pink-50/60 border-b border-pink-100">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-pink-400" />
-                  <span className="font-semibold text-gray-800">{m.label} {filterAnnee}</span>
+            <div key={m.mois} style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: `1px solid ${D.border}`, background: 'rgba(255,255,255,0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Calendar style={{ width: 14, height: 14, color: D.pink }} />
+                  <span style={{ fontWeight: 700, color: D.text, fontSize: 14 }}>{m.label} {filterAnnee}</span>
                 </div>
-                <span className="font-bold text-pink-600">{m.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</span>
+                <span style={{ fontWeight: 700, color: D.pink, fontSize: 15 }}>
+                  {m.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                </span>
               </div>
-              <div className="divide-y divide-pink-50">
-                {m.items.map(r => {
-                  const src = getSourceStyle(r.source)
-                  return (
-                    <div key={r.id} className="flex items-center justify-between px-5 py-3 hover:bg-pink-50/40 transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${src.color}`}>{src.label}</span>
-                        {r.description && <span className="text-sm text-gray-500">{r.description}</span>}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-gray-900">{r.montant_eur.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
-                        <button onClick={() => deleteRevenu(r.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-100 text-red-400 transition-all">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+              {m.items.map(r => {
+                const src = getSourceStyle(r.source)
+                return (
+                  <div key={r.id} className="rev-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: `1px solid ${D.border}`, transition: 'background 0.15s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 10px', borderRadius: 980, background: src.dark, color: src.text }}>{src.label}</span>
+                      {r.description && <span style={{ fontSize: 13, color: D.sub }}>{r.description}</span>}
                     </div>
-                  )
-                })}
-              </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontWeight: 700, color: D.text, fontSize: 15 }}>{r.montant_eur.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                      <button className="del-btn" onClick={() => deleteRevenu(r.id)}
+                        style={{ padding: '5px', borderRadius: 8, background: 'rgba(255,59,48,0.12)', border: 'none', cursor: 'pointer', color: '#FF3B30', transition: 'opacity 0.15s', display: 'flex' }}>
+                        <Trash2 style={{ width: 13, height: 13 }} />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl shadow-pink-100 w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-gray-900">Ajouter un revenu</h2>
-              <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-pink-50">
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: D.card, borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, border: `1px solid ${D.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: D.text, margin: 0 }}>Ajouter un revenu</h2>
+              <button onClick={() => setShowForm(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: D.muted, display: 'flex' }}><X style={{ width: 20, height: 20 }} /></button>
             </div>
-            <form onSubmit={addRevenu} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mois</label>
-                  <select value={form.mois} onChange={e => setForm({...form, mois: parseInt(e.target.value)})}
-                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
+            <form onSubmit={addRevenu} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <InputField label="Mois">
+                  <select value={form.mois} onChange={e => setForm({...form, mois: parseInt(e.target.value)})} style={inputStyle}>
                     {MOIS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Année</label>
-                  <input type="number" value={form.annee} onChange={e => setForm({...form, annee: parseInt(e.target.value)})}
-                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300" />
-                </div>
+                </InputField>
+                <InputField label="Année">
+                  <input type="number" value={form.annee} onChange={e => setForm({...form, annee: parseInt(e.target.value)})} style={inputStyle} />
+                </InputField>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                <select value={form.source} onChange={e => setForm({...form, source: e.target.value})}
-                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
+              <InputField label="Source">
+                <select value={form.source} onChange={e => setForm({...form, source: e.target.value})} style={inputStyle}>
                   {SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Montant (€) *</label>
+              </InputField>
+              <InputField label="Montant (€) *">
                 <input required type="number" step="0.01" min="0" value={form.montant_eur}
                   onChange={e => setForm({...form, montant_eur: e.target.value})}
-                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-                  placeholder="0.00" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  style={inputStyle} placeholder="0.00" />
+              </InputField>
+              <InputField label="Description">
                 <input value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-                  placeholder="ex : Sponsoring Nike, AdSense mars..." />
-              </div>
-              <div className="flex gap-3 pt-1">
+                  style={inputStyle} placeholder="ex : Sponsoring Nike, AdSense mars..." />
+              </InputField>
+              <div style={{ display: 'flex', gap: 10 }}>
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 border border-pink-200 text-gray-500 py-2.5 rounded-xl font-medium hover:bg-pink-50 transition-colors">
+                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: `1px solid ${D.border}`, background: 'transparent', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: D.sub }}>
                   Annuler
                 </button>
                 <button type="submit"
-                  className="flex-1 gradient-primary text-white py-2.5 rounded-xl font-medium shadow-sm shadow-pink-200 transition-all">
+                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: D.pink, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#fff' }}>
                   Enregistrer
                 </button>
               </div>
