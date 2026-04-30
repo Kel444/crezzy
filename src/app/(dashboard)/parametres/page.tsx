@@ -67,23 +67,68 @@ export default function ParametresPage() {
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    await supabase.from('profiles').update({
-      full_name: form.full_name || null,
-      email: form.email || null,
-      siret: form.siret || null,
-      adresse: form.adresse || null,
-      acre: form.acre,
-      taux_imposition: form.taux_imposition,
-      frequence_urssaf: form.frequence_urssaf,
-      date_debut_activite: form.date_debut_activite || null,
-      youtube_api_key: form.youtube_api_key || null,
-      activite_type: form.activite_type,
-    }).eq('user_id', user.id)
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setSaving(false); return }
+
+      const { error: updateError, data: updatedRows } = await supabase
+        .from('profiles')
+        .update({
+          full_name: form.full_name || null,
+          email: form.email || null,
+          siret: form.siret || null,
+          adresse: form.adresse || null,
+          acre: form.acre,
+          taux_imposition: Number(form.taux_imposition),
+          frequence_urssaf: form.frequence_urssaf,
+          date_debut_activite: form.date_debut_activite || null,
+          youtube_api_key: form.youtube_api_key || null,
+          activite_type: form.activite_type,
+        })
+        .eq('user_id', user.id)
+        .select()
+
+      if (updateError) {
+        console.error('[Parametres] Update error:', updateError)
+        alert('Erreur sauvegarde : ' + updateError.message)
+        setSaving(false)
+        return
+      }
+
+      // If no row matched, create the profile
+      if (!updatedRows || updatedRows.length === 0) {
+        console.warn('[Parametres] No row updated, creating profile...')
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            full_name: form.full_name || null,
+            email: form.email || user.email || null,
+            siret: form.siret || null,
+            adresse: form.adresse || null,
+            acre: form.acre,
+            taux_imposition: Number(form.taux_imposition),
+            frequence_urssaf: form.frequence_urssaf,
+            date_debut_activite: form.date_debut_activite || null,
+            youtube_api_key: form.youtube_api_key || null,
+            activite_type: form.activite_type,
+          })
+        if (insertError) {
+          console.error('[Parametres] Insert error:', insertError)
+          alert('Erreur creation profil : ' + insertError.message)
+          setSaving(false)
+          return
+        }
+      }
+
+      setSaving(false)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+      await loadProfile()
+    } catch (err) {
+      console.error('[Parametres] Unexpected error:', err)
+      setSaving(false)
+    }
   }
 
   if (loading) return (
