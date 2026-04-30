@@ -124,14 +124,14 @@ export default function ChannelDetailPage({ params }: { params: { channelId: str
   if (!channel) return (
     <div className="text-center py-16 text-gray-400">
       <p>Chaine introuvable.</p>
-      <Link href="/youtube" className="text-purple-600 hover:underline text-sm mt-2 inline-block">Retour</Link>
+      <Link href="/youtube" className="text-pink-600 hover:underline text-sm mt-2 inline-block">Retour</Link>
     </div>
   )
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/youtube" className="p-2 rounded-xl hover:bg-purple-50 text-gray-400 hover:text-purple-600 transition-colors">
+        <Link href="/youtube" className="p-2 rounded-xl hover:bg-pink-50 text-gray-400 hover:text-pink-600 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex items-center gap-3">
@@ -153,7 +153,7 @@ export default function ChannelDetailPage({ params }: { params: { channelId: str
         </div>
         {apiKey && (
           <button onClick={() => loadVideos(channel.channel_id, apiKey)} disabled={loadingVideos}
-            className="ml-auto p-2 rounded-xl hover:bg-purple-50 text-purple-600 transition-colors disabled:opacity-40">
+            className="ml-auto p-2 rounded-xl hover:bg-pink-50 text-pink-600 transition-colors disabled:opacity-40">
             <RefreshCw className={`w-4 h-4 ${loadingVideos ? 'animate-spin' : ''}`} />
           </button>
         )}
@@ -162,7 +162,7 @@ export default function ChannelDetailPage({ params }: { params: { channelId: str
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Abonnes', value: formatNum(channel.subscribers), icon: Users, color: 'text-purple-700', bg: 'bg-purple-50' },
+          { label: 'Abonnes', value: formatNum(channel.subscribers), icon: Users, color: 'text-pink-700', bg: 'bg-pink-50' },
           { label: 'Vues totales', value: formatNum(channel.total_views), icon: Eye, color: 'text-blue-700', bg: 'bg-blue-50' },
           { label: 'Videos', value: formatNum(channel.video_count), icon: Film, color: 'text-pink-700', bg: 'bg-pink-50' },
         ].map(s => (
@@ -179,7 +179,7 @@ export default function ChannelDetailPage({ params }: { params: { channelId: str
       {/* Videos */}
       <div>
         <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-purple-500" />
+          <TrendingUp className="w-4 h-4 text-pink-500" />
           Dernieres videos
         </h2>
 
@@ -210,7 +210,7 @@ export default function ChannelDetailPage({ params }: { params: { channelId: str
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-purple-700 transition-colors">
+                  <p className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-pink-700 transition-colors">
                     {v.title}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">

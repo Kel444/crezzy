@@ -1,178 +1,92 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Zap, Loader2 } from "lucide-react";
+'use client'
+
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Sparkles, Eye, EyeOff } from 'lucide-react'
 
 export default function RegisterPage() {
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [nom, setNom] = useState("");
-  const [prenom, setPrenom] = useState("");
-  const [statutJuridique, setStatutJuridique] = useState("");
-  const [regimeFiscal, setRegimeFiscal] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const router = useRouter();
-  const supabase = createClient();
+  const supabase = createClient()
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleRegister(e: React.FormEvent) {
-    e.preventDefault();
-    if (step === 1) { setStep(2); return; }
-    setLoading(true);
-    setError("");
-
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { nom, prenom, statut_juridique: statutJuridique, regime_fiscal: regimeFiscal },
-      },
-    });
-
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
-    }
-
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) { setError(error.message); setLoading(false); return }
     if (data.user) {
-      await supabase.from("profiles").insert({
-        user_id: data.user.id,
-        email,
-        nom,
-        prenom,
-        statut_juridique: statutJuridique || "auto-entrepreneur",
-        regime_fiscal: regimeFiscal || "micro-entreprise",
-      });
-      setSuccess(true);
+      await supabase.from('profiles').upsert({ id: data.user.id, email, full_name: fullName })
     }
-    setLoading(false);
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md text-center p-8">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-xl font-bold mb-2">Compte créé !</h2>
-          <p className="text-muted-foreground mb-6">Vérifie ton email pour confirmer ton compte, puis connecte-toi.</p>
-          <Button onClick={() => router.push("/login")} className="w-full">Aller à la connexion</Button>
-        </Card>
-      </div>
-    );
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold">Crezzy</span>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 mb-4">
+            <Sparkles className="w-7 h-7 text-white" />
           </div>
+          <h1 className="text-2xl font-bold text-gray-900">Crezzy</h1>
+          <p className="text-sm text-gray-400 mt-1">Finance créateur</p>
         </div>
 
-        <div className="flex items-center gap-2 mb-6">
-          {[1, 2].map((s) => (
-            <div key={s} className={`h-1.5 flex-1 rounded-full transition-colors ${s <= step ? "bg-primary" : "bg-muted"}`} />
-          ))}
+        <div className="bg-white rounded-3xl shadow-xl shadow-pink-100 p-8 border border-pink-50">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Créer un compte</h2>
+          <p className="text-sm text-gray-400 mb-6">Prends le contrôle de tes finances ✨</p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Ton prénom / nom</label>
+              <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)}
+                className="w-full border border-pink-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 placeholder:text-gray-300"
+                placeholder="Kel" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                className="w-full border border-pink-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 placeholder:text-gray-300"
+                placeholder="toi@email.com" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mot de passe</label>
+              <div className="relative">
+                <input type={showPwd ? 'text' : 'password'} required minLength={8} value={password} onChange={e => setPassword(e.target.value)}
+                  className="w-full border border-pink-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 pr-11 placeholder:text-gray-300"
+                  placeholder="8 caractères minimum" />
+                <button type="button" onClick={() => setShowPwd(!showPwd)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
+                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <button type="submit" disabled={loading}
+              className="w-full gradient-primary text-white py-3 rounded-xl font-semibold shadow-sm shadow-pink-200 hover:shadow-pink-300 transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-2">
+              {loading ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : 'Créer mon compte'}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-400 mt-5">
+            Déjà un compte ?{' '}
+            <Link href="/login" className="text-pink-600 font-medium hover:underline">Se connecter</Link>
+          </p>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{step === 1 ? "Crée ton compte" : "Ton statut professionnel"}</CardTitle>
-            <CardDescription>
-              {step === 1 ? "Étape 1 sur 2 — tes informations de base" : "Étape 2 sur 2 — pour adapter les calculs"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleRegister} className="space-y-4">
-              {error && <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
-
-              {step === 1 && (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="prenom">Prénom</Label>
-                      <Input id="prenom" value={prenom} onChange={(e) => setPrenom(e.target.value)} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="nom">Nom</Label>
-                      <Input id="nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Mot de passe</Label>
-                    <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
-                    <p className="text-xs text-muted-foreground">8 caractères minimum</p>
-                  </div>
-                </>
-              )}
-
-              {step === 2 && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Statut juridique</Label>
-                    <Select value={statutJuridique} onValueChange={setStatutJuridique}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto-entrepreneur">Auto-entrepreneur</SelectItem>
-                        <SelectItem value="sasu">SASU</SelectItem>
-                        <SelectItem value="eurl">EURL</SelectItem>
-                        <SelectItem value="ei">Entreprise individuelle</SelectItem>
-                        <SelectItem value="autre">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Régime fiscal</Label>
-                    <Select value={regimeFiscal} onValueChange={setRegimeFiscal}>
-                      <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="micro-entreprise">Micro-entreprise</SelectItem>
-                        <SelectItem value="versement-liberatoire">Versement libératoire</SelectItem>
-                        <SelectItem value="reel-simplifie">Réel simplifié</SelectItem>
-                        <SelectItem value="is">IS (sociétés)</SelectItem>
-                        <SelectItem value="autre">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="text-xs text-muted-foreground p-3 bg-muted rounded-lg">
-                    Ces informations permettent à Crezzy de calculer tes cotisations correctement. Tu pourras les modifier plus tard dans ton profil.
-                  </p>
-                </>
-              )}
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Création...</> :
-                  step === 1 ? "Continuer →" : "Créer mon compte"}
-              </Button>
-              {step === 2 && (
-                <Button type="button" variant="ghost" className="w-full" onClick={() => setStep(1)}>← Retour</Button>
-              )}
-            </form>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Déjà un compte ?{" "}
-              <Link href="/login" className="text-primary hover:underline font-medium">Se connecter</Link>
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </div>
-  );
+  )
 }

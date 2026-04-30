@@ -232,7 +232,7 @@ export default function FacturationPage() {
           <p className="text-sm text-gray-500 mt-0.5">Gérez vos factures clients</p>
         </div>
         <button onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 gradient-primary text-white px-4 py-2.5 rounded-xl font-medium shadow-lg hover:shadow-purple-200 transition-all hover:scale-[1.02]">
+          className="flex items-center gap-2 gradient-primary text-white px-4 py-2.5 rounded-xl font-medium shadow-lg hover:shadow-pink-200 transition-all hover:scale-[1.02]">
           <PlusCircle className="w-4 h-4" />
           Nouvelle facture
         </button>
@@ -241,7 +241,7 @@ export default function FacturationPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total facturé', value: totalHt, color: 'text-purple-700', bg: 'bg-purple-50' },
+          { label: 'Total facturé', value: totalHt, color: 'text-pink-700', bg: 'bg-pink-50' },
           { label: 'Encaissé', value: totalPayees, color: 'text-green-700', bg: 'bg-green-50' },
           { label: 'En attente', value: totalEnAttente, color: 'text-blue-700', bg: 'bg-blue-50' },
         ].map(s => (
@@ -263,7 +263,7 @@ export default function FacturationPage() {
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-purple-100 bg-purple-50/50">
+              <tr className="border-b border-pink-100 bg-pink-50/50">
                 {['Numéro', 'Client', 'Date', 'Montant HT', 'Statut', 'Actions'].map(h => (
                   <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
                 ))}
@@ -271,8 +271,8 @@ export default function FacturationPage() {
             </thead>
             <tbody>
               {factures.map((f, i) => (
-                <tr key={f.id} className={`border-b border-purple-50 hover:bg-purple-50/30 transition-colors ${i % 2 === 0 ? '' : 'bg-purple-50/20'}`}>
-                  <td className="px-4 py-3 font-mono text-sm font-medium text-purple-700">{f.numero}</td>
+                <tr key={f.id} className={`border-b border-purple-50 hover:bg-pink-50/30 transition-colors ${i % 2 === 0 ? '' : 'bg-pink-50/20'}`}>
+                  <td className="px-4 py-3 font-mono text-sm font-medium text-pink-700">{f.numero}</td>
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-900 text-sm">{f.client_nom}</p>
                     {f.client_email && <p className="text-xs text-gray-400">{f.client_email}</p>}
@@ -293,7 +293,7 @@ export default function FacturationPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <button onClick={() => generatePDF(f)}
-                        className="p-1.5 rounded-lg hover:bg-purple-100 text-purple-600 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-pink-100 text-pink-600 transition-colors"
                         title="Télécharger PDF">
                         <Download className="w-4 h-4" />
                       </button>
@@ -315,7 +315,7 @@ export default function FacturationPage() {
       {showForm && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-purple-100">
+            <div className="flex items-center justify-between p-6 border-b border-pink-100">
               <h2 className="text-lg font-bold text-gray-900">Nouvelle facture</h2>
               <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-gray-100">
                 <X className="w-5 h-5 text-gray-500" />
@@ -325,39 +325,39 @@ export default function FacturationPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Client *</label>
                 <input required value={form.client_nom} onChange={e => setForm({...form, client_nom: e.target.value})}
-                  className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                   placeholder="Nom du client" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email client</label>
                   <input type="email" value={form.client_email} onChange={e => setForm({...form, client_email: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                     placeholder="client@email.com" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date d'émission *</label>
                   <input required type="date" value={form.date_emission} onChange={e => setForm({...form, date_emission: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adresse client</label>
                 <input value={form.client_adresse} onChange={e => setForm({...form, client_adresse: e.target.value})}
-                  className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                   placeholder="Adresse complète" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Montant HT (€) *</label>
                   <input required type="number" step="0.01" min="0" value={form.montant_ht} onChange={e => setForm({...form, montant_ht: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                     placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">TVA (%)</label>
                   <select value={form.taux_tva} onChange={e => setForm({...form, taux_tva: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
                     <option value="0">0% (micro)</option>
                     <option value="20">20%</option>
                     <option value="10">10%</option>
@@ -369,12 +369,12 @@ export default function FacturationPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date d'échéance</label>
                   <input type="date" value={form.date_echeance} onChange={e => setForm({...form, date_echeance: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                   <select value={form.statut} onChange={e => setForm({...form, statut: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
                     {Object.entries(STATUT_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </div>
@@ -383,16 +383,16 @@ export default function FacturationPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})}
                   rows={2}
-                  className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
+                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 resize-none"
                   placeholder="Description de la prestation..." />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 border border-purple-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-purple-50 transition-colors">
+                  className="flex-1 border border-pink-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-pink-50 transition-colors">
                   Annuler
                 </button>
                 <button type="submit"
-                  className="flex-1 gradient-primary text-white py-2.5 rounded-xl font-medium shadow-md hover:shadow-purple-200 transition-all">
+                  className="flex-1 gradient-primary text-white py-2.5 rounded-xl font-medium shadow-md hover:shadow-pink-200 transition-all">
                   Créer la facture
                 </button>
               </div>

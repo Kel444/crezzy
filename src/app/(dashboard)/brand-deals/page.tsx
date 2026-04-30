@@ -110,7 +110,7 @@ export default function BrandDealsPage() {
           <p className="text-sm text-gray-500 mt-0.5">Suivez vos partenariats du premier contact au paiement</p>
         </div>
         <button onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 gradient-primary text-white px-4 py-2.5 rounded-xl font-medium shadow-lg hover:shadow-purple-200 transition-all hover:scale-[1.02]">
+          className="flex items-center gap-2 gradient-primary text-white px-4 py-2.5 rounded-xl font-medium shadow-lg hover:shadow-pink-200 transition-all hover:scale-[1.02]">
           <PlusCircle className="w-4 h-4" />
           Nouveau deal
         </button>
@@ -118,7 +118,7 @@ export default function BrandDealsPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Pipeline total', value: `${totalPipeline.toFixed(0)} EUR`, icon: TrendingUp, color: 'text-purple-700', bg: 'bg-purple-50' },
+          { label: 'Pipeline total', value: `${totalPipeline.toFixed(0)} EUR`, icon: TrendingUp, color: 'text-pink-700', bg: 'bg-pink-50' },
           { label: 'Encaisse', value: `${totalPaye.toFixed(0)} EUR`, icon: Euro, color: 'text-green-700', bg: 'bg-green-50' },
           { label: 'En cours', value: `${enCours} deals`, icon: Clock, color: 'text-blue-700', bg: 'bg-blue-50' },
         ].map(s => (
@@ -169,7 +169,7 @@ export default function BrandDealsPage() {
                   <div className="flex items-center gap-3 flex-wrap">
                     <h3 className="font-semibold text-gray-900">{deal.marque}</h3>
                     {deal.plateforme && (
-                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-medium">
                         {deal.plateforme}
                       </span>
                     )}
@@ -186,9 +186,9 @@ export default function BrandDealsPage() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  {deal.montant && <p className="text-lg font-bold text-purple-700">{deal.montant.toFixed(0)} EUR</p>}
+                  {deal.montant && <p className="text-lg font-bold text-pink-700">{deal.montant.toFixed(0)} EUR</p>}
                   <select value={deal.statut} onChange={e => updateStatut(deal.id, e.target.value)}
-                    className="text-xs border border-purple-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                    className="text-xs border border-pink-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white">
                     {STATUTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </div>
@@ -201,7 +201,7 @@ export default function BrandDealsPage() {
       {showForm && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-purple-100">
+            <div className="flex items-center justify-between p-6 border-b border-pink-100">
               <h2 className="text-lg font-bold text-gray-900">Nouveau brand deal</h2>
               <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-gray-100">
                 <X className="w-5 h-5 text-gray-500" />
@@ -211,20 +211,20 @@ export default function BrandDealsPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Marque / Entreprise *</label>
                 <input required value={form.marque} onChange={e => setForm({...form, marque: e.target.value})}
-                  className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                   placeholder="Nom de la marque" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
                   <input value={form.contact_nom} onChange={e => setForm({...form, contact_nom: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                     placeholder="Nom du contact" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email contact</label>
                   <input type="email" value={form.contact_email} onChange={e => setForm({...form, contact_email: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                     placeholder="contact@marque.com" />
                 </div>
               </div>
@@ -232,13 +232,13 @@ export default function BrandDealsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Montant (EUR)</label>
                   <input type="number" min="0" step="1" value={form.montant} onChange={e => setForm({...form, montant: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                     placeholder="0" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Plateforme</label>
                   <select value={form.plateforme} onChange={e => setForm({...form, plateforme: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
                     {PLATEFORMES.map(p => <option key={p}>{p}</option>)}
                   </select>
                 </div>
@@ -247,18 +247,18 @@ export default function BrandDealsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date de contact</label>
                   <input type="date" value={form.date_contact} onChange={e => setForm({...form, date_contact: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date de livraison</label>
                   <input type="date" value={form.date_livraison} onChange={e => setForm({...form, date_livraison: e.target.value})}
-                    className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                    className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                 <select value={form.statut} onChange={e => setForm({...form, statut: e.target.value})}
-                  className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
                   {STATUTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
@@ -266,16 +266,16 @@ export default function BrandDealsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                 <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})}
                   rows={2}
-                  className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
+                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 resize-none"
                   placeholder="Details, conditions, briefing..." />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 border border-purple-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-purple-50 transition-colors">
+                  className="flex-1 border border-pink-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-pink-50 transition-colors">
                   Annuler
                 </button>
                 <button type="submit"
-                  className="flex-1 gradient-primary text-white py-2.5 rounded-xl font-medium shadow-md hover:shadow-purple-200 transition-all">
+                  className="flex-1 gradient-primary text-white py-2.5 rounded-xl font-medium shadow-md hover:shadow-pink-200 transition-all">
                   Ajouter le deal
                 </button>
               </div>

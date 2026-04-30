@@ -11,9 +11,7 @@ function formatEur(n: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 }
 
-function getMonthName(m: number) {
-  return ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'][m - 1]
-}
+const MOIS_NOMS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
 export default function DashboardPage() {
   const supabase = createClient()
@@ -51,19 +49,18 @@ export default function DashboardPage() {
   const revenusAnnee = revenus.reduce((s: number, r: any) => s + r.montant_eur, 0)
   const depensesDeductibles = depenses.filter((d: any) => d.deductible).reduce((s: number, d: any) => s + d.montant, 0)
   const beneficeNet = revenusAnnee - depensesDeductibles
-  const cotisationsEstimees = revenusAnnee * (tauxEffectif / 100)
+  const cotisations = revenusAnnee * (tauxEffectif / 100)
   const pctPlafond = Math.min((revenusAnnee / PLAFOND_MICRO) * 100, 100)
 
-  const moisNoms = ['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec']
-  const chartData = moisNoms.map((nom, i) => ({
+  const chartData = MOIS_NOMS.map((nom, i) => ({
     mois: nom,
     revenus: revenus.filter((r: any) => r.mois === i + 1).reduce((s: number, r: any) => s + r.montant_eur, 0),
   }))
 
   function prochainEcheance() {
     if (frequence === 'mensuel') {
-      const d = new Date(annee, mois, 0) // dernier jour du mois courant
-      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+      const last = new Date(annee, mois, 0)
+      return last.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
     }
     if (mois <= 1) return '31 janvier'
     if (mois <= 4) return '30 avril'
@@ -73,112 +70,107 @@ export default function DashboardPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+      <div className="w-8 h-8 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin" />
     </div>
   )
+
+  const prenom = profile?.full_name?.split(' ')[0] || ''
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Bonjour{profile?.full_name ? ` ${profile.full_name.split(' ')[0]}` : ''} 👋
+          Bonjour{prenom ? ` ${prenom}` : ''} 👋
         </h1>
-        <p className="text-gray-500 text-sm mt-0.5">
-          Voila ou tu en es pour {getMonthName(mois)} {annee}
+        <p className="text-gray-400 text-sm mt-0.5">
+          {MOIS_NOMS[mois - 1]} {annee} — voilà où tu en es
         </p>
       </div>
 
       {pctPlafond >= 80 && (
-        <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
-          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-100">
+          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-amber-700">Attention au plafond micro-entreprise</p>
-            <p className="text-sm text-amber-600 mt-0.5">
-              Tu as atteint {pctPlafond.toFixed(0)}% du plafond de {formatEur(PLAFOND_MICRO)}.
-            </p>
+            <p className="text-sm font-semibold text-amber-700">Plafond micro-entreprise bientôt atteint</p>
+            <p className="text-sm text-amber-500 mt-0.5">{pctPlafond.toFixed(0)}% du plafond de {formatEur(PLAFOND_MICRO)} atteint.</p>
           </div>
         </div>
       )}
 
       {acre && (
-        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-green-50 border border-green-200">
-          <CheckCircle className="w-4 h-4 text-green-500" />
-          <p className="text-sm text-green-700 font-medium">
-            ACRE active — cotisations reduites a {tauxEffectif.toFixed(1)}% (au lieu de {tauxBrut}%)
-          </p>
+        <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-green-50 border border-green-100">
+          <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+          <p className="text-sm text-green-700 font-medium">ACRE active — cotisations à {tauxEffectif.toFixed(1)}% (au lieu de {tauxBrut}%)</p>
         </div>
       )}
 
+      {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: `Revenus ${getMonthName(mois)}`, value: formatEur(revenusMoisCourant), sub: `Ce mois`, icon: Euro, color: 'text-purple-700', bg: 'bg-purple-50' },
-          { label: 'Total annuel', value: formatEur(revenusAnnee), sub: `Cumul ${annee}`, icon: TrendingUp, color: 'text-blue-700', bg: 'bg-blue-50' },
-          { label: 'Cotisations estimees', value: formatEur(cotisationsEstimees), sub: `Taux : ${tauxEffectif.toFixed(1)}%${acre ? ' (ACRE)' : ''}`, icon: TrendingDown, color: 'text-orange-700', bg: 'bg-orange-50' },
-          { label: 'Benefice net', value: formatEur(beneficeNet), sub: 'Apres depenses deductibles', icon: Wallet, color: beneficeNet >= 0 ? 'text-green-700' : 'text-red-600', bg: beneficeNet >= 0 ? 'bg-green-50' : 'bg-red-50' },
+          { label: `Revenus ${MOIS_NOMS[mois-1]}`, value: formatEur(revenusMoisCourant), sub: 'ce mois', icon: Euro, iconColor: 'text-pink-400', bg: 'bg-pink-50', text: 'text-pink-700' },
+          { label: 'Total annuel', value: formatEur(revenusAnnee), sub: `cumul ${annee}`, icon: TrendingUp, iconColor: 'text-rose-400', bg: 'bg-rose-50', text: 'text-rose-700' },
+          { label: 'Cotisations', value: formatEur(cotisations), sub: `taux ${tauxEffectif.toFixed(1)}%`, icon: TrendingDown, iconColor: 'text-orange-400', bg: 'bg-orange-50', text: 'text-orange-700' },
+          { label: 'Bénéfice net', value: formatEur(beneficeNet), sub: 'après dépenses', icon: Wallet, iconColor: beneficeNet >= 0 ? 'text-emerald-400' : 'text-red-400', bg: beneficeNet >= 0 ? 'bg-emerald-50' : 'bg-red-50', text: beneficeNet >= 0 ? 'text-emerald-700' : 'text-red-600' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-4`}>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-gray-500">{s.label}</p>
-              <s.icon className={`w-4 h-4 ${s.color} opacity-60`} />
+              <p className="text-xs font-medium text-gray-400">{s.label}</p>
+              <s.icon className={`w-4 h-4 ${s.iconColor}`} />
             </div>
-            <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+            <p className={`text-xl font-bold ${s.text}`}>{s.value}</p>
+            <p className="text-xs text-gray-400 mt-0.5 capitalize">{s.sub}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-5">
+        {/* Graphique */}
         <div className="gradient-card rounded-2xl p-5 lg:col-span-2">
-          <h2 className="font-semibold text-gray-800 mb-4">Evolution des revenus {annee}</h2>
-          <ResponsiveContainer width="100%" height={220}>
+          <h2 className="font-semibold text-gray-800 mb-4 text-sm">Revenus {annee}</h2>
+          <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={chartData}>
               <defs>
-                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                <linearGradient id="pinkGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#f472b6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3e8ff" />
-              <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}€`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#fce7f3" />
+              <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#d1a0b8' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#d1a0b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}€`} />
               <Tooltip
-                contentStyle={{ background: 'white', border: '1px solid #e9d5ff', borderRadius: '12px', fontSize: '12px' }}
+                contentStyle={{ background: 'white', border: '1px solid #fce7f3', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 20px rgba(236,72,153,0.08)' }}
                 formatter={(v: any) => [formatEur(Number(v)), 'Revenus']}
               />
-              <Area type="monotone" dataKey="revenus" stroke="#a855f7" fill="url(#revGrad)" strokeWidth={2.5} />
+              <Area type="monotone" dataKey="revenus" stroke="#ec4899" fill="url(#pinkGrad)" strokeWidth={2.5} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
+        {/* Plafond + URSSAF */}
         <div className="space-y-4">
           <div className="gradient-card rounded-2xl p-5">
-            <h3 className="font-semibold text-gray-800 text-sm mb-3">Plafond micro-entreprise</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Plafond micro-entreprise</h3>
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-400">Atteint</span>
-              <span className={`font-bold ${pctPlafond >= 80 ? 'text-amber-500' : 'text-purple-700'}`}>
-                {pctPlafond.toFixed(1)}%
-              </span>
+              <span className="text-gray-400 text-xs">Atteint</span>
+              <span className={`font-bold text-sm ${pctPlafond >= 80 ? 'text-amber-500' : 'text-pink-600'}`}>{pctPlafond.toFixed(1)}%</span>
             </div>
-            <div className="w-full bg-purple-100 rounded-full h-2.5">
-              <div
-                className={`h-2.5 rounded-full transition-all ${pctPlafond >= 80 ? 'bg-amber-400' : 'bg-purple-500'}`}
-                style={{ width: `${pctPlafond}%` }}
-              />
+            <div className="w-full bg-pink-100 rounded-full h-2">
+              <div className={`h-2 rounded-full transition-all ${pctPlafond >= 80 ? 'bg-amber-400' : 'gradient-primary'}`}
+                style={{ width: `${pctPlafond}%` }} />
             </div>
             <p className="text-xs text-gray-400 mt-2">{formatEur(revenusAnnee)} / {formatEur(PLAFOND_MICRO)}</p>
           </div>
 
           <div className="gradient-card rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-4 h-4 text-purple-400" />
-              <h3 className="font-semibold text-gray-800 text-sm">Prochaine declaration URSSAF</h3>
+              <Calendar className="w-4 h-4 text-pink-400" />
+              <h3 className="text-sm font-semibold text-gray-700">Prochaine URSSAF</h3>
             </div>
-            <p className="text-xl font-bold text-purple-700">{prochainEcheance()}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium capitalize">
-                {frequence}
-              </span>
-              <span className="text-xs text-gray-400">{formatEur(cotisationsEstimees)} a prevoir</span>
+            <p className="text-xl font-bold text-pink-600">{prochainEcheance()}</p>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-medium capitalize">{frequence}</span>
+              <span className="text-xs text-gray-400">{formatEur(cotisations)} à prévoir</span>
             </div>
           </div>
         </div>

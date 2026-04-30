@@ -1,100 +1,83 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Eye, EyeOff, Loader2 } from "lucide-react";
+'use client'
+
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Sparkles, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
-  const supabase = createClient();
+  const supabase = createClient()
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError("Email ou mot de passe incorrect.");
-      setLoading(false);
-    } else {
-      router.push("/dashboard");
-    }
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) { setError('Email ou mot de passe incorrect'); setLoading(false); return }
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold">Crezzy</span>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 gradient-primary rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 mb-4">
+            <Sparkles className="w-7 h-7 text-white" />
           </div>
+          <h1 className="text-2xl font-bold text-gray-900">Crezzy</h1>
+          <p className="text-sm text-gray-400 mt-1">Finance créateur</p>
         </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Bon retour !</CardTitle>
-            <CardDescription>Connecte-toi à ton espace créateur</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="toi@exemple.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+        <div className="bg-white rounded-3xl shadow-xl shadow-pink-100 p-8 border border-pink-50">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Connexion</h2>
+          <p className="text-sm text-gray-400 mb-6">Bon retour parmi nous 👋</p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                className="w-full border border-pink-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white placeholder:text-gray-300"
+                placeholder="toi@email.com" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mot de passe</label>
+              <div className="relative">
+                <input type={showPwd ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                  className="w-full border border-pink-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 pr-11 placeholder:text-gray-300"
+                  placeholder="••••••••" />
+                <button type="button" onClick={() => setShowPwd(!showPwd)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
+                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Connexion...</> : "Se connecter"}
-              </Button>
-            </form>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Pas encore de compte ?{" "}
-              <Link href="/register" className="text-primary hover:underline font-medium">Créer un compte</Link>
-            </p>
-          </CardContent>
-        </Card>
+            </div>
+            <button type="submit" disabled={loading}
+              className="w-full gradient-primary text-white py-3 rounded-xl font-semibold shadow-sm shadow-pink-200 hover:shadow-pink-300 transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-2">
+              {loading ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : 'Se connecter'}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-400 mt-5">
+            Pas encore de compte ?{' '}
+            <Link href="/register" className="text-pink-600 font-medium hover:underline">Créer un compte</Link>
+          </p>
+        </div>
       </div>
     </div>
-  );
+  )
 }

@@ -148,17 +148,36 @@ export default function YoutubePage() {
         </button>
       </div>
 
-      {!profile?.youtube_api_key && (
-        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
-          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-amber-800">Cle API YouTube manquante</p>
-            <p className="text-xs text-amber-600 mt-0.5">
-              Ajoutez votre cle API dans{' '}
-              <Link href="/parametres" className="underline font-medium">Parametres</Link>
-              {' '}pour synchroniser vos stats.
-            </p>
+      {/* Explication connexion YouTube */}
+      <div className="rounded-2xl border border-pink-100 bg-pink-50/60 p-5 space-y-3">
+        <p className="font-semibold text-gray-800 text-sm">Comment connecter ta chaîne YouTube ?</p>
+        <div className="space-y-2 text-sm text-gray-600">
+          <div className="flex items-start gap-2.5">
+            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">1</span>
+            <p>Va sur <a href="https://console.cloud.google.com" target="_blank" className="text-pink-600 font-medium underline underline-offset-2">console.cloud.google.com</a> et connecte-toi avec ton compte Google.</p>
           </div>
+          <div className="flex items-start gap-2.5">
+            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">2</span>
+            <p>Crée un projet, active <strong>YouTube Data API v3</strong>, puis dans Identifiants clique sur <em>Créer des identifiants → Clé API</em>.</p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">3</span>
+            <p>Copie la clé API (commence par <code className="bg-pink-100 px-1 rounded text-xs">AIza</code>) et colle-la dans <Link href="/parametres" className="text-pink-600 font-medium underline underline-offset-2">Paramètres → YouTube</Link>.</p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <span className="w-5 h-5 rounded-full gradient-primary text-white text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">4</span>
+            <p>Reviens ici et clique sur <strong>Ajouter une chaîne</strong> en entrant l'ID de ta chaîne (ex : <code className="bg-pink-100 px-1 rounded text-xs">@tonnom</code>).</p>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 pt-1 border-t border-pink-100">⚠️ Cette API donne accès aux stats publiques (abonnés, vues, vidéos). Les revenus AdSense ne sont pas accessibles via API — saisis-les manuellement dans <Link href="/revenus" className="text-pink-600 underline underline-offset-2">Revenus</Link>.</p>
+      </div>
+
+      {!profile?.youtube_api_key && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4">
+          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+          <p className="text-sm text-amber-700">
+            Clé API manquante — <Link href="/parametres" className="underline font-medium">Paramètres → YouTube</Link>
+          </p>
         </div>
       )}
 
@@ -166,10 +185,10 @@ export default function YoutubePage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="gradient-card rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Users className="w-4 h-4 text-purple-500" />
+              <Users className="w-4 h-4 text-pink-500" />
               <p className="text-xs text-gray-500 font-medium">Total abonnes</p>
             </div>
-            <p className="text-2xl font-bold text-purple-700">{formatNum(totalSubs)}</p>
+            <p className="text-2xl font-bold text-pink-700">{formatNum(totalSubs)}</p>
           </div>
           <div className="gradient-card rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -204,14 +223,14 @@ export default function YoutubePage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-gray-900">{chan.channel_name}</h3>
                     <a href={`https://youtube.com/channel/${chan.channel_id}`} target="_blank"
-                      className="text-gray-400 hover:text-purple-500 transition-colors">
+                      className="text-gray-400 hover:text-pink-500 transition-colors">
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
                   <div className="flex items-center gap-5 mt-2">
                     <div className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-purple-400" />
-                      <span className="text-sm font-semibold text-purple-700">{formatNum(chan.subscribers)}</span>
+                      <Users className="w-3.5 h-3.5 text-pink-400" />
+                      <span className="text-sm font-semibold text-pink-700">{formatNum(chan.subscribers)}</span>
                       <span className="text-xs text-gray-400">abonnes</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -233,7 +252,7 @@ export default function YoutubePage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button onClick={() => syncChannel(chan)} disabled={syncing === chan.id || !profile?.youtube_api_key}
-                    className="text-xs border border-purple-200 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-40 flex items-center gap-1">
+                    className="text-xs border border-pink-200 text-pink-600 px-3 py-1.5 rounded-lg hover:bg-pink-50 transition-colors disabled:opacity-40 flex items-center gap-1">
                     {syncing === chan.id ? (
                       <><div className="w-3 h-3 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" /> Sync...</>
                     ) : 'Synchroniser'}
@@ -262,7 +281,7 @@ export default function YoutubePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">ID ou handle de la chaine</label>
                 <input required value={channelInput} onChange={e => setChannelInput(e.target.value)}
-                  className="w-full border border-purple-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  className="w-full border border-pink-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
                   placeholder="UCxxxxxx ou @votrenom" />
                 <p className="text-xs text-gray-400 mt-1">Trouvez l ID dans l URL de votre chaine YouTube</p>
               </div>
@@ -274,7 +293,7 @@ export default function YoutubePage() {
               )}
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => { setShowForm(false); setAddError('') }}
-                  className="flex-1 border border-purple-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-purple-50 transition-colors">
+                  className="flex-1 border border-pink-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-pink-50 transition-colors">
                   Annuler
                 </button>
                 <button type="submit" disabled={adding}
