@@ -52,6 +52,7 @@ export default function RevenusPage() {
   const [revenus, setRevenus] = useState<Revenu[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [filterAnnee, setFilterAnnee] = useState(new Date().getFullYear())
 
   const [form, setForm] = useState({
@@ -78,21 +79,58 @@ export default function RevenusPage() {
     setLoading(false)
   }
 
+  async function getOrCreateChaine(userId: string): Promise<string> {
+    // Try to get existing channel
+    const { data: existing } = await supabase
+      .from('chaines')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+      .single()
+    if (existing) return existing.id
+    // Create a default channel
+    const { data: created, error } = await supabase
+      .from('chaines')
+      .insert({ user_id: userId, nom: 'Principale', devise: 'EUR' })
+      .select('id')
+      .single()
+    if (error || !created) throw new Error('Impossible de créer la chaîne : ' + error?.message)
+    return created.id
+  }
+
   async function addRevenu(e: React.FormEvent) {
     e.preventDefault()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    await supabase.from('revenus').insert({
-      user_id: user.id,
-      mois: form.mois,
-      annee: form.annee,
-      montant_eur: parseFloat(form.montant_eur),
-      source: form.source,
-      description: form.description || null,
-    })
-    setShowForm(false)
-    setForm({ mois: new Date().getMonth() + 1, annee: new Date().getFullYear(), montant_eur: '', source: 'adsense', description: '' })
-    loadRevenus()
+    setSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setSaving(false); return }
+
+      const chaineId = await getOrCreateChaine(user.id)
+
+      const { error } = await supabase.from('revenus').insert({
+        user_id: user.id,
+        chaine_id: chaineId,
+        mois: form.mois,
+        annee: form.annee,
+        montant_eur: parseFloat(form.montant_eur),
+        montant: parseFloat(form.montant_eur),
+        source: form.source,
+        description: form.description || null,
+      })
+
+      if (error) {
+        alert('Erreur : ' + error.message)
+        setSaving(false)
+        return
+      }
+
+      setShowForm(false)
+      setForm({ mois: new Date().getMonth() + 1, annee: new Date().getFullYear(), montant_eur: '', source: 'adsense', description: '' })
+      loadRevenus()
+    } catch (err: any) {
+      alert('Erreur : ' + err.message)
+    }
+    setSaving(false)
   }
 
   async function deleteRevenu(id: string) {
@@ -245,13 +283,13 @@ export default function RevenusPage() {
                   style={inputStyle} placeholder="ex : Sponsoring Nike, AdSense mars..." />
               </InputField>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button type="button" onClick={() => setShowForm(false)}
+                <button type="button" onClick={() => { setShowForm(false); setSaving(false) }}
                   style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: `1px solid ${D.border}`, background: 'transparent', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: D.sub }}>
                   Annuler
                 </button>
-                <button type="submit"
-                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: D.pink, fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#fff' }}>
-                  Enregistrer
+                <button type="submit" disabled={saving}
+                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: D.pink, fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', color: '#fff', opacity: saving ? 0.7 : 1 }}>
+                  {saving ? 'Ajout...' : 'Enregistrer'}
                 </button>
               </div>
             </form>
