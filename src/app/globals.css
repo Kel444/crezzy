@@ -28,7 +28,7 @@
 }
 
 @layer base {
-  * { @apply border-border box-sizing-border; box-sizing: border-box; }
+  * { @apply border-border; box-sizing: border-box; }
 
   html {
     background: #07070F;
