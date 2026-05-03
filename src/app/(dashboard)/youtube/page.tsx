@@ -287,8 +287,15 @@ export default function YoutubePage() {
         const videos = channelVideos[chan.channel_id] || []
         const longForm = videos.filter(v => parseDuration(v.duration) > 60)
         const snaps = snapshots[chan.channel_id] || []
-        const viewsData = snaps.map(s => ({ label: s.date.slice(5), value: s.views }))
-        const subsData = snaps.map(s => ({ label: s.date.slice(5), value: s.subscribers }))
+        // Daily delta: views gained each day (difference between consecutive snapshots)
+        const viewsData = snaps.slice(1).map((s, i) => ({
+          label: s.date.slice(5),
+          value: Math.max(0, (s.views ?? 0) - (snaps[i].views ?? 0))
+        }))
+        const subsData = snaps.slice(1).map((s, i) => ({
+          label: s.date.slice(5),
+          value: Math.max(0, (s.subscribers ?? 0) - (snaps[i].subscribers ?? 0))
+        }))
         const hasSnaps = snaps.length >= 2
 
         return (
@@ -369,7 +376,7 @@ export default function YoutubePage() {
 
                 {/* Views 28J */}
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>Vues — historique</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>Vues / jour</p>
                   {!hasSnaps ? (
                     <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: D.card2, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 12, gap: 6 }}>
                       <Eye style={{ width: 18, height: 18, color: D.muted }} />
@@ -385,8 +392,8 @@ export default function YoutubePage() {
                           </linearGradient>
                         </defs>
                         <XAxis dataKey="label" tick={{ fill: D.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: D.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <YAxis tick={{ fill: D.muted, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
+                        <Tooltip content={<CustomTooltip suffix=" vues" />} />
                         <Area type="monotone" dataKey="value" stroke={D.blue} strokeWidth={2} fill="url(#viewGrad)" dot={false} />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -398,7 +405,7 @@ export default function YoutubePage() {
 
                 {/* Subs 28J */}
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>Abonnés — historique</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>Abonnés gagnés / jour</p>
                   {!hasSnaps ? (
                     <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: D.card2, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 12, gap: 6 }}>
                       <Users style={{ width: 18, height: 18, color: D.muted }} />
