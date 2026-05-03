@@ -17,8 +17,8 @@ const CATS = [
 ];
 
 const D = {
-  card: "#1C1C1E", card2: "#2C2C2E",
-  border: "rgba(255,255,255,0.07)",
+  card: "rgba(255,255,255,0.055)", card2: "rgba(255,255,255,0.09)",
+  border: "rgba(255,255,255,0.12)",
   text: "#F5F5F7", sub: "#8E8E93", muted: "#636366",
   pink: "#FF2D78", green: "#30D158", orange: "#FF9F0A",
 };
@@ -126,12 +126,12 @@ export default function DepensesPage() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: "48px 32px", textAlign: "center" }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: "48px 32px", textAlign: "center" }}>
           <p style={{ color: D.sub, fontSize: 15, fontWeight: 500, margin: 0 }}>Aucune dépense trouvée</p>
           <p style={{ color: D.muted, fontSize: 13, margin: "4px 0 0" }}>Ajoute ta première dépense pour commencer</p>
         </div>
       ) : (
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, overflow: "hidden" }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, overflow: "hidden" }}>
           {filtered.map((d, i) => {
             const cat = CATS.find(c => c.value === d.categorie);
             return (
@@ -165,7 +165,7 @@ export default function DepensesPage() {
       {/* Modal */}
       {showModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }}>
-          <div style={{ background: D.card, borderRadius: 20, padding: 28, width: "100%", maxWidth: 440, border: `1px solid ${D.border}`, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+          <div style={{ background: 'rgba(12,8,22,0.93)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', borderRadius: 20, padding: 28, width: "100%", maxWidth: 440, border: `1px solid ${D.border}`, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: D.text, margin: 0 }}>Nouvelle dépense</h2>
               <button onClick={() => setShowModal(false)} style={{ border: "none", background: "none", cursor: "pointer", color: D.muted, fontSize: 22, lineHeight: 1, display: "flex" }}>×</button>
@@ -191,7 +191,7 @@ export default function DepensesPage() {
                   {CATS.map(c => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
                 </select>
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: D.card2, borderRadius: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: D.card2, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 12 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 500, color: D.text, margin: 0 }}>Déductible fiscalement</p>
                   <p style={{ fontSize: 11, color: D.muted, margin: "2px 0 0" }}>Dépense liée à ton activité</p>

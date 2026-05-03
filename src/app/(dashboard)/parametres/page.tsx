@@ -20,13 +20,13 @@ interface Profile {
 }
 
 const D = {
-  card: '#1C1C1E', card2: '#2C2C2E', card3: '#3A3A3C', border: 'rgba(255,255,255,0.07)',
+  card: 'rgba(255,255,255,0.055)', card2: 'rgba(255,255,255,0.09)', card3: 'rgba(255,255,255,0.13)', border: 'rgba(255,255,255,0.12)',
   text: '#F5F5F7', sub: '#8E8E93', muted: '#636366', pink: '#FF2D78',
   green: '#30D158', blue: '#0A84FF',
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: D.card2, border: `1px solid ${D.border}`, borderRadius: 12,
+  width: '100%', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: `1px solid ${D.border}`, borderRadius: 12,
   padding: '10px 14px', fontSize: 14, color: D.text, outline: 'none', boxSizing: 'border-box',
 }
 
@@ -156,7 +156,7 @@ export default function ParametresPage() {
       <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* Profil */}
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#FF2D78,#FF6B9D)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <User style={{ width: 14, height: 14, color: '#fff' }} />
@@ -206,7 +206,7 @@ export default function ParametresPage() {
         </div>
 
         {/* Fiscalité */}
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#BF5AF2,#0A84FF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <CreditCard style={{ width: 14, height: 14, color: '#fff' }} />
@@ -216,7 +216,7 @@ export default function ParametresPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
             {/* ACRE toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: D.card2, borderRadius: 14, border: `1px solid ${D.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: D.card2, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 14, border: `1px solid ${D.border}` }}>
               <div>
                 <p style={{ fontWeight: 600, color: D.text, fontSize: 14, margin: '0 0 3px' }}>Bénéficiaire de l'ACRE</p>
                 <p style={{ fontSize: 12, color: D.muted, margin: 0 }}>Réduction de 50% sur tes cotisations la 1ère année</p>
@@ -274,7 +274,7 @@ export default function ParametresPage() {
         </div>
 
         {/* YouTube */}
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#FF3B30,#FF2D78)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <PlayCircle style={{ width: 14, height: 14, color: '#fff' }} />

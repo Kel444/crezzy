@@ -29,7 +29,7 @@ interface Facture {
 }
 
 const D = {
-  card: '#1C1C1E', card2: '#2C2C2E', border: 'rgba(255,255,255,0.07)',
+  card: 'rgba(255,255,255,0.055)', card2: 'rgba(255,255,255,0.09)', border: 'rgba(255,255,255,0.12)',
   text: '#F5F5F7', sub: '#8E8E93', muted: '#636366', pink: '#FF2D78',
   green: '#30D158', blue: '#0A84FF', orange: '#FF9F0A', red: '#FF3B30',
 }
@@ -42,7 +42,7 @@ const STATUT_STYLES: Record<string, { bg: string, color: string, label: string }
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: D.card2, border: `1px solid ${D.border}`, borderRadius: 12,
+  width: '100%', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: `1px solid ${D.border}`, borderRadius: 12,
   padding: '10px 14px', fontSize: 14, color: D.text, outline: 'none', boxSizing: 'border-box',
 }
 
@@ -189,14 +189,14 @@ export default function FacturationPage() {
           { label: 'Encaissé', value: totalPayees, color: D.green, bg: 'rgba(48,209,88,0.1)' },
           { label: 'En attente', value: totalEnAttente, color: D.blue, bg: 'rgba(10,132,255,0.1)' },
         ].map(s => (
-          <div key={s.label} style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: '18px 20px' }}>
+          <div key={s.label} style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: '18px 20px' }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>{s.label}</p>
             <p style={{ fontSize: 24, fontWeight: 700, color: s.color, margin: 0, letterSpacing: '-0.03em' }}>{s.value.toFixed(2)} €</p>
           </div>
         ))}
       </div>
 
-      <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
+      <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
         {factures.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 32px' }}>
             <FileText style={{ width: 36, height: 36, color: D.muted, marginBottom: 12 }} />
@@ -254,7 +254,7 @@ export default function FacturationPage() {
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: D.card, borderRadius: 20, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', border: `1px solid ${D.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+          <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 20, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', border: `1px solid ${D.border}`, boxShadow: '0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: `1px solid ${D.border}` }}>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: D.text, margin: 0 }}>Nouvelle facture</h2>
               <button onClick={() => setShowForm(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: D.muted, display: 'flex' }}><X style={{ width: 20, height: 20 }} /></button>
@@ -327,7 +327,7 @@ export default function FacturationPage() {
 
       {deleteId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: D.card, borderRadius: 20, padding: 28, width: '100%', maxWidth: 360, border: `1px solid ${D.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.5)', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(12,8,22,0.93)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 360, border: `1px solid ${D.border}`, boxShadow: '0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.1)', textAlign: 'center' }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,59,48,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <Trash2 style={{ width: 22, height: 22, color: D.red }} />
             </div>

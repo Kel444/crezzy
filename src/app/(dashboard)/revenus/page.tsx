@@ -25,7 +25,7 @@ const SOURCES = [
 const MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
 const D = {
-  card: '#1C1C1E', card2: '#2C2C2E', border: 'rgba(255,255,255,0.07)',
+  card: 'rgba(255,255,255,0.055)', card2: 'rgba(255,255,255,0.09)', border: 'rgba(255,255,255,0.12)',
   text: '#F5F5F7', sub: '#8E8E93', muted: '#636366', pink: '#FF2D78',
 }
 
@@ -43,7 +43,7 @@ function InputField({ label, children }: { label: string, children: React.ReactN
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: D.card2, border: `1px solid ${D.border}`, borderRadius: 12,
+  width: '100%', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: `1px solid ${D.border}`, borderRadius: 12,
   padding: '10px 14px', fontSize: 14, color: D.text, outline: 'none', boxSizing: 'border-box',
 }
 
@@ -169,7 +169,7 @@ export default function RevenusPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <select value={filterAnnee} onChange={e => setFilterAnnee(parseInt(e.target.value))}
-            style={{ background: D.card2, border: `1px solid ${D.border}`, borderRadius: 12, padding: '8px 14px', fontSize: 13, color: D.text, outline: 'none', cursor: 'pointer' }}>
+            style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: `1px solid ${D.border}`, borderRadius: 12, padding: '8px 14px', fontSize: 13, color: D.text, outline: 'none', cursor: 'pointer' }}>
             {[2024, 2025, 2026, 2027].map(y => <option key={y}>{y}</option>)}
           </select>
           <button onClick={() => setShowForm(true)}
@@ -180,7 +180,7 @@ export default function RevenusPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
             <Euro style={{ width: 14, height: 14, color: D.pink }} />
             <p style={{ fontSize: 11, fontWeight: 600, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Total {filterAnnee}</p>
@@ -189,7 +189,7 @@ export default function RevenusPage() {
             {totalAnnee.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
           </p>
         </div>
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
           <p style={{ fontSize: 11, fontWeight: 600, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 14px' }}>Répartition</p>
           {bySource.length === 0 ? (
             <p style={{ fontSize: 13, color: D.muted }}>Aucun revenu saisi</p>
@@ -209,7 +209,7 @@ export default function RevenusPage() {
       </div>
 
       {byMois.length === 0 ? (
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 32px' }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 32px' }}>
           <TrendingUp style={{ width: 36, height: 36, color: D.muted, marginBottom: 12 }} />
           <p style={{ fontWeight: 600, color: D.sub, fontSize: 15, margin: '0 0 4px' }}>Aucun revenu pour {filterAnnee}</p>
           <p style={{ fontSize: 13, color: D.muted, margin: 0 }}>Ajoute ta première rentrée ci-dessus</p>
@@ -217,7 +217,7 @@ export default function RevenusPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {byMois.map(m => (
-            <div key={m.mois} style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
+            <div key={m.mois} style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: `1px solid ${D.border}`, background: 'rgba(255,255,255,0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Calendar style={{ width: 14, height: 14, color: D.pink }} />
@@ -252,7 +252,7 @@ export default function RevenusPage() {
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: D.card, borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, border: `1px solid ${D.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+          <div style={{ background: 'rgba(12,8,22,0.93)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, border: `1px solid ${D.border}`, boxShadow: '0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: D.text, margin: 0 }}>Ajouter un revenu</h2>
               <button onClick={() => setShowForm(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: D.muted, display: 'flex' }}><X style={{ width: 20, height: 20 }} /></button>

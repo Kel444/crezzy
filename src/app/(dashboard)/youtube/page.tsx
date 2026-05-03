@@ -64,7 +64,7 @@ function timeAgo(dateStr: string) {
 const MOIS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
 const D = {
-  bg: '#111113', card: '#1C1C1E', card2: '#2C2C2E', border: 'rgba(255,255,255,0.07)',
+  bg: '#111113', card: 'rgba(255,255,255,0.055)', card2: 'rgba(255,255,255,0.09)', border: 'rgba(255,255,255,0.12)',
   text: '#F5F5F7', sub: '#8E8E93', muted: '#636366',
   pink: '#FF2D78', blue: '#0A84FF', orange: '#FF9F0A', green: '#30D158',
 }
@@ -225,7 +225,7 @@ export default function YoutubePage() {
       </div>
 
       {hasApiKey === false && (
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: 32 }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: D.card2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Key style={{ width: 20, height: 20, color: D.sub }} />
@@ -242,7 +242,7 @@ export default function YoutubePage() {
       )}
 
       {channels.length === 0 && hasApiKey && (
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: '48px 32px', textAlign: 'center' }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: '48px 32px', textAlign: 'center' }}>
           <PlayCircle style={{ width: 36, height: 36, color: D.muted, margin: '0 auto 12px' }} />
           <p style={{ color: D.sub, fontSize: 15, fontWeight: 500, margin: '0 0 4px' }}>Aucune chaîne ajoutée</p>
           <p style={{ color: D.muted, fontSize: 13, margin: '0 0 16px' }}>Clique sur "Ajouter une chaîne" pour commencer</p>
@@ -254,7 +254,7 @@ export default function YoutubePage() {
 
       {/* Revenue chart — shared across all channels */}
       {channels.length > 0 && (
-        <div style={{ background: D.card, borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
+        <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 18, border: `1px solid ${D.border}`, padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <TrendingUp style={{ width: 16, height: 16, color: D.pink }} />
             <p style={{ fontSize: 13, fontWeight: 700, color: D.text, margin: 0 }}>Revenus déclarés — 6 derniers mois</p>
@@ -292,7 +292,7 @@ export default function YoutubePage() {
         const hasSnaps = snaps.length >= 2
 
         return (
-          <div key={chan.id} style={{ background: D.card, borderRadius: 20, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
+          <div key={chan.id} style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 20, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
             {/* Channel header */}
             <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', gap: 14, borderBottom: `1px solid ${D.border}` }}>
               {chan.thumbnail_url
@@ -371,7 +371,7 @@ export default function YoutubePage() {
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 700, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>Vues — historique</p>
                   {!hasSnaps ? (
-                    <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: D.card2, borderRadius: 12, gap: 6 }}>
+                    <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: D.card2, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 12, gap: 6 }}>
                       <Eye style={{ width: 18, height: 18, color: D.muted }} />
                       <p style={{ color: D.muted, fontSize: 12, margin: 0, textAlign: 'center' }}>Synchro quotidienne pour<br/>voir la tendance</p>
                     </div>
@@ -400,7 +400,7 @@ export default function YoutubePage() {
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 700, color: D.sub, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>Abonnés — historique</p>
                   {!hasSnaps ? (
-                    <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: D.card2, borderRadius: 12, gap: 6 }}>
+                    <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: D.card2, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 12, gap: 6 }}>
                       <Users style={{ width: 18, height: 18, color: D.muted }} />
                       <p style={{ color: D.muted, fontSize: 12, margin: 0, textAlign: 'center' }}>Synchro quotidienne pour<br/>voir la tendance</p>
                     </div>
@@ -435,7 +435,7 @@ export default function YoutubePage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
-          <div style={{ background: D.card, borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, border: `1px solid ${D.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+          <div style={{ background: D.card, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, border: `1px solid ${D.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: D.text, margin: 0 }}>Ajouter une chaîne</h2>
               <button onClick={() => { setShowAdd(false); setAddError(''); setHandle('') }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: D.muted, display: 'flex' }}><X style={{ width: 20, height: 20 }} /></button>

@@ -4,7 +4,6 @@
 
 @layer base {
   :root {
-    /* Dark theme */
     --background: 240 6% 7%;
     --foreground: 240 5% 96%;
     --card: 240 4% 11%;
@@ -29,10 +28,21 @@
 }
 
 @layer base {
-  * { @apply border-border box-border; }
-  html { background: #111113; color-scheme: dark; }
+  * { @apply border-border box-sizing-border; box-sizing: border-box; }
+
+  html {
+    background: #07070F;
+    color-scheme: dark;
+  }
+
   body {
-    background: #111113;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 10%, rgba(120,60,220,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 90%, rgba(255,45,120,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 80% 10%, rgba(10,132,255,0.10) 0%, transparent 50%),
+      #07070F;
+    background-attachment: fixed;
     color: #F5F5F7;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -41,17 +51,19 @@
   }
 }
 
-/* ── Dark card ── */
+/* ── Glass card ── */
 .card {
-  background: #1C1C1E;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.07);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.055);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.11);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 /* ── Brand pink button ── */
 .btn-primary {
-  background: #FF2D78;
+  background: linear-gradient(135deg, #FF5A9E, #FF2D78);
   color: #fff;
   border-radius: 980px;
   padding: 10px 22px;
@@ -64,8 +76,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  box-shadow: 0 4px 16px rgba(255,45,120,0.35);
 }
-.btn-primary:hover { background: #e0205f; transform: scale(1.01); }
+.btn-primary:hover { filter: brightness(1.1); transform: scale(1.01); }
 .btn-primary:active { transform: scale(0.99); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
@@ -77,48 +90,46 @@
   padding: 10px 22px;
   font-size: 14px;
   font-weight: 500;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.13);
   cursor: pointer;
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  backdrop-filter: blur(8px);
 }
-.btn-secondary:hover { background: rgba(255,255,255,0.12); }
+.btn-secondary:hover { background: rgba(255,255,255,0.13); }
 
 /* ── Input field ── */
 .input-field {
   width: 100%;
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: #2C2C2E;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.07);
   color: #F5F5F7;
   font-size: 14px;
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s;
+  backdrop-filter: blur(8px);
 }
-.input-field:focus { border-color: #FF2D78; box-shadow: 0 0 0 3px rgba(255,45,120,0.15); }
-.input-field::placeholder { color: #636366; }
+.input-field:focus { border-color: rgba(255,45,120,0.7); box-shadow: 0 0 0 3px rgba(255,45,120,0.12); }
+.input-field::placeholder { color: #48484A; }
 
 /* ── Gradient utilities ── */
 .gradient-primary { background: linear-gradient(135deg, #FF6B9D 0%, #FF2D78 100%); }
-.gradient-card {
-  background: linear-gradient(135deg, rgba(255,107,157,0.15) 0%, rgba(255,45,120,0.08) 100%);
-  border: 1px solid rgba(255,45,120,0.15);
-}
 
-/* Scrollbar dark */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #3A3A3C; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #48484A; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-/* shadcn override for dark inputs */
+/* Dark inputs override */
 .dark input, input[type="text"], input[type="email"], input[type="password"],
 input[type="number"], input[type="date"], textarea, select {
-  background: #2C2C2E !important;
+  background: rgba(255,255,255,0.07) !important;
   color: #F5F5F7 !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.12) !important;
 }
